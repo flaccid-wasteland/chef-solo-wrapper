@@ -5,12 +5,7 @@ puts 'chef-solo-wrapper 0.0.1.'
 
 require 'rubygems'
 require 'trollop'
-
 require 'json'
-#require 'xmlsimple'
-
-server = false
-attributes = Hash.new
 
 opts = Trollop::options do
 	version "chef-solo-wrapper (c) 2011 Chris Fordham"
@@ -31,6 +26,9 @@ EOS
   opt :debug,     "Debug mode."                                                                                             # flag --debug, default faulse
 end
 p opts unless !opts.verbose
+
+server = false
+attributes = Hash.new
 
 if File.file?('/etc/chef/solo.rb')
   puts File.new('/etc/chef/solo.rb', "r").read unless !opts.verbose
@@ -112,11 +110,12 @@ puts "    DEBUG:\n#{p attributes}" unless !opts.debug
 puts 'Importing Chef RubyGem.' unless !opts.verbose
 require 'chef'
 
-# finally, run chef-solo
-puts 'Starting Chef Solo.' unless !opts.verbose or opts.dry
 chef_config = " -c #{opts.config}" unless !opts.config
 chef_json = " -j #{opts.json}" unless !opts.json
 
 cmd = "chef-solo#{chef_config}#{chef_json} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
 puts "    DEBUG: #{cmd}" unless !opts.debug
+
+# finally, run chef-solo
+puts 'Starting Chef Solo.' unless !opts.verbose or opts.dry
 system(cmd) unless opts.dry
