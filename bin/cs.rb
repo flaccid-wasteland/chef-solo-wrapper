@@ -12,9 +12,6 @@ require 'json'
 server = false
 attributes = Hash.new
 
-chef_config =  "#{File.expand_path('~')}/solo.rb"
-chef_json = "#{File.expand_path('~')}/node.json"
-
 opts = Trollop::options do
 	version "chef-solo-wrapper (c) 2011 Chris Fordham"
 	banner <<-EOS
@@ -26,7 +23,7 @@ where [options] are:
 EOS
   opt :server,    "Use attribute data from a RightScale server by nickname or ID.",       :short => "-s", :type => String   # flag --server, default false
   opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                    # flag --config, default false
-  opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j"                    # flag --json, default false
+  opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String   # flag --json, default false
   opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                    # flag --dry, default false
   opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String   # flag --run_list, default false
   opt :verbose,   "Verbose mode.",                                                        :short => "-v"                    # flag --verbose, default false
@@ -96,4 +93,6 @@ require 'chef'
 
 # finally, run chef-solo
 puts 'Starting Chef Solo.' unless !opts.verbose or opts.dry
-system("chef-solo -c #{chef_config} -j #{chef_json} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )") unless opts.dry
+chef_config = " -c #{opts.config}" unless !opts.config
+chef_json = " -j #{opts.json}" unless !opts.json
+system("chef-solo#{chef_config}#{chef_json}|| ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )") unless opts.dry
