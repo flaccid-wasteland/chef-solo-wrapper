@@ -49,7 +49,7 @@ else
     chef_json = " -j #{node_file}"
   end
 end
-p attributes
+puts "    DEBUG:\n#{p attributes}" unless !opts.debug
 
 # when a rs server is specified
 if opts.server
@@ -106,7 +106,7 @@ fh = File.new(node_file, "w")
 fh.write(node_json)
 fh.close
 
-p attributes unless !opts.verbose
+puts "    DEBUG:\n#{p attributes}" unless !opts.debug
 
 # import chef
 puts 'Importing Chef RubyGem.' unless !opts.verbose
