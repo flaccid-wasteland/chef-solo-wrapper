@@ -39,7 +39,7 @@ puts 'Importing RestConnection RubyGem.' unless !opts.verbose
 require 'rest_connection'
 
 # fetch server inputs when using --server
-if opts.server.to_i < 1
+if opts.server.to_i > 0
   puts "Finding server: '%#{opts.server}%'"
   server = Server.find(:first) { |s| s.nickname =~ /#{opts.server}/ }
 else
@@ -47,7 +47,7 @@ else
 end
 
 # when a rs server is specified
-if server
+if server != ""
   puts "Found server, '#{server.nickname}'."
   puts server.to_yaml unless !opts.verbose
   server.reload_current
@@ -77,6 +77,9 @@ if server
       end
     end
   }
+else
+  puts 'No server found.'
+  exit 1
 end
 
 # append runlist
