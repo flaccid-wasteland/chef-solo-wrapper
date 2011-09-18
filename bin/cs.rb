@@ -25,11 +25,31 @@ EOS
   opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                    # flag --config, default false
   opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String   # flag --json, default false
   opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                    # flag --dry, default false
-  opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String   # flag --run_list, default false
-  opt :verbose,   "Verbose mode.",                                                        :short => "-v"                    # flag --verbose, default false
+  opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String   # flag --run, default false
+  opt :write,     "Write back to local JSON file.",                                       :short => "-w"                   # flag --write, default false
+  opt :verbose,   "Verbose mode.",                                                        :short => "-v"                   # flag --verbose, default false
   opt :debug,     "Debug mode."                                                                                             # flag --debug, default faulse
 end
 p opts unless !opts.verbose
+
+if File.file?('/etc/chef/solo.rb')
+  puts File.new('/etc/chef/solo.rb', "r").read unless !opts.verbose
+end
+
+if opts.json
+  attributes = File.new(opts.json, "r").read
+else
+  if File.file?('/etc/chef/node.json')
+    node_file = '/etc/chef/node.json'
+    attributes = JSON.parse(File.new(node_file, "r").read)
+    chef_json = " -j #{node_file}"
+  elsif File.file?("#{File.expand_path('~')}/node.json")
+    node_file = "#{File.expand_path('~')}/node.json"
+    attributes = JSON.parse(File.new("#{File.expand_path('~')}/node.json", "r").read)
+    chef_json = " -j #{node_file}"
+  end
+end
+p attributes
 
 # when a rs server is specified
 if opts.server
@@ -78,15 +98,13 @@ if opts.run
   attributes['run_list'] = "#{opts.run}"
 end
 
-if attributes.length > 0
-  # write attributes to node.json
-  # prettify/json
-  node_json = JSON.pretty_generate(attributes)
-  puts node_json unless !opts.verbose
-  node_file = File.new("#{File.expand_path('~')}/node.json", "w")
-  node_file.write(node_json)
-  node_file.close
-end
+# write attributes to node.json
+# prettify/json
+node_json = JSON.pretty_generate(attributes)
+puts node_json unless !opts.verbose
+fh = File.new(node_file, "w")
+fh.write(node_json)
+fh.close
 
 p attributes unless !opts.verbose
 
@@ -98,4 +116,7 @@ require 'chef'
 puts 'Starting Chef Solo.' unless !opts.verbose or opts.dry
 chef_config = " -c #{opts.config}" unless !opts.config
 chef_json = " -j #{opts.json}" unless !opts.json
-system("chef-solo#{chef_config}#{chef_json}|| ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )") unless opts.dry
+
+cmd = "chef-solo#{chef_config}#{chef_json} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
+puts "    DEBUG: #{cmd}" unless !opts.debug
+system(cmd) unless opts.dry
