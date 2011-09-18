@@ -74,9 +74,6 @@ if opts.server
       end
     end
   }
-else
-  puts 'No server found.'
-  exit 1
 end
 
 # append runlist
