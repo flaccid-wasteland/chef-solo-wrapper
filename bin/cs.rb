@@ -74,21 +74,21 @@ if opts.server
       end
     end
   }
+  # write attributes to node.json
+  # prettify/json
+  node_json = JSON.pretty_generate(attributes)
+  puts node_json unless !opts.verbose
+  node_file = File.new(chef_json, "w")
+  node_file.write(node_json)
+  node_file.close
 end
 
-# append runlist
-attributes['run_list'] = "#{opts.run}"
+if opts.run
+  # append runlist
+  attributes['run_list'] = "#{opts.run}"
+end
 
-#p attributes unless !opts.verbose
-
-# prettify/json
-node_json = JSON.pretty_generate(attributes)
-puts node_json unless !opts.verbose
-
-# write attributes to node.json
-node_file = File.new(chef_json, "w")
-node_file.write(node_json)
-node_file.close
+p attributes unless !opts.verbose
 
 # import chef
 puts 'Importing Chef RubyGem.' unless !opts.verbose
