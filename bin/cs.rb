@@ -47,7 +47,7 @@ else
 end
 
 # when a rs server is specified
-if server != ""
+if !server.nil? and server != ""
   puts "Found server, '#{server.nickname}'."
   puts server.to_yaml unless !opts.verbose
   server.reload_current
