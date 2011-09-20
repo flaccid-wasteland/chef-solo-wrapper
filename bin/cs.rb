@@ -17,6 +17,7 @@ Usage:
 where [options] are:
 EOS
   opt :server,    "Use attribute data from a RightScale server by nickname or ID.",       :short => "-s", :type => String   # flag --server, default false
+  opt :sandbox,   "Use the Ruby environment in the local RightLink sandbox."                                         
   opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                    # flag --config, default false
   opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String   # flag --json, default false
   opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                    # flag --dry, default false
@@ -25,13 +26,13 @@ EOS
   opt :verbose,   "Verbose mode.",                                                        :short => "-v"                   # flag --verbose, default false
   opt :debug,     "Debug mode."                                                                                             # flag --debug, default faulse
 end
-p opts unless !opts.verbose
+puts "    DEBUG: #{opts.to_json}" unless !opts.debug
 
 server = false
 attributes = Hash.new
 
 if File.file?('/etc/chef/solo.rb')
-  puts File.new('/etc/chef/solo.rb', "r").read unless !opts.verbose
+  puts File.new('/etc/chef/solo.rb', "r").read unless !opts.debug
 end
 
 if opts.json
@@ -99,7 +100,7 @@ end
 # write attributes to node.json
 # prettify/json
 node_json = JSON.pretty_generate(attributes)
-puts node_json unless !opts.verbose
+puts "Node Attributes: \n #{node_json}" unless !opts.verbose
 fh = File.new(node_file, "w")
 fh.write(node_json)
 fh.close
@@ -113,7 +114,12 @@ require 'chef'
 chef_config = " -c #{opts.config}" unless !opts.config
 chef_json = " -j #{opts.json}" unless !opts.json
 
-cmd = "chef-solo#{chef_config}#{chef_json} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
+cs = 'chef-solo'
+if opts.sandbox
+  cs = '/opt/rightscale/sandbox/bin/chef-solo'
+end
+
+cmd = "#{cs} #{chef_config}#{chef_json} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
 puts "    DEBUG: #{cmd}" unless !opts.debug
 
 # finally, run chef-solo
