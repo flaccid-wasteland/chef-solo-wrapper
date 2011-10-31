@@ -31,7 +31,6 @@ puts "options: #{opts.to_json}" unless !(opts.verbose || opts.debug)
 
 solo = false
 server = false
-attributes = Hash.new
 
 # ensure a solo.rb exists for run
 if File.file?('/etc/chef/solo.rb')
@@ -67,9 +66,8 @@ else
     node_file = "#{File.expand_path('~')}/node.json"
     attributes = JSON.parse(File.new("#{File.expand_path('~')}/node.json", "r").read)
   else
-    node_file = File.file?("#{File.expand_path('~')}/node.json")
-    attributes = ''
-    system("touch #{node_file}")
+    node_file = "#{File.expand_path('~')}/node.json"
+    attributes = JSON.parse("{\n}\n")
   end
   chef_json = " -j #{node_file}"
 end
