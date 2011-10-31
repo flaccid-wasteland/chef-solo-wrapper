@@ -38,7 +38,7 @@ if File.file?('/etc/chef/solo.rb')
 else
   puts '    DEBUG: /etc/chef/solo.rb: not found.' unless !opts.debug
 end
-if File.file?('~/solo.rb')
+if File.file?("#{ENV['HOME']}/solo.rb")
   solo = '~/solo.rb'
 else
   puts '    DEBUG: ~/solo.rb: not found.' unless !opts.debug
