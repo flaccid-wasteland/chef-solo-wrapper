@@ -5,7 +5,6 @@ puts 'chef-solo-wrapper 0.0.1.'
 
 require 'rubygems'
 require 'trollop'
-require 'json'
 
 opts = Trollop::options do
 	version "chef-solo-wrapper (c) 2011 Chris Fordham"
@@ -56,6 +55,7 @@ end
 if opts.json
   attributes = File.new(opts.json, "r").read
 else
+  require 'json'
   if File.file?('/etc/chef/node.json')
     node_file = '/etc/chef/node.json'
     attributes = JSON.parse(File.new(node_file, "r").read)
@@ -139,7 +139,7 @@ puts "    DEBUG:\n#{p attributes}" unless !opts.debug
 puts 'Importing Chef RubyGem.' unless !opts.verbose
 require 'chef'
 
-chef_config = "-c #{opts.config}" unless !opts.config
+chef_config = " -c #{opts.config}" unless !opts.config
 chef_json = " -j #{opts.json}" unless !opts.json
 
 cs = 'chef-solo'
@@ -147,13 +147,13 @@ if opts.sandbox
   cs = '/opt/rightscale/sandbox/bin/chef-solo'
 end
 
-cmd = "#{cs} #{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
+cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
 puts "    DEBUG: #{cmd}" unless !opts.debug
 
 # finally, run chef-solo
 puts 'Starting Chef Solo.' unless !opts.verbose
-if ! opts.dry
-  system(cmd) unless opts.dry
+unless opts.dry
+  system(cmd)
 else
   puts 'Dry run only, exiting.'
   exit
