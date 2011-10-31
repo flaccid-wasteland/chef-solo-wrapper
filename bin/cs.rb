@@ -5,6 +5,7 @@ puts 'chef-solo-wrapper 0.0.1.'
 
 require 'rubygems'
 require 'trollop'
+require 'json'
 
 opts = Trollop::options do
 	version "chef-solo-wrapper (c) 2011 Chris Fordham"
@@ -26,13 +27,13 @@ EOS
   opt :verbose,   "Verbose mode.",                                                        :short => "-v"                                        # flag --verbose, default false
   opt :debug,     "Debug mode."                                                                                                                 # flag --debug, default faulse
 end
-puts "    DEBUG: #{opts.to_json}" unless !opts.debug
+puts "    DEBUG: options: #{opts.to_json}" unless !(opts.verbose || opts.debug)
 
+solo = false
 server = false
 attributes = Hash.new
 
 # ensure a solo.rb exists for run
-solo = false
 if File.file?('/etc/chef/solo.rb')
   solo = '/etc/chef/solo.rb'
 else
@@ -48,6 +49,10 @@ unless solo
   exit 1
 else
   puts "==> Using #{solo}." unless !opts.debug
+  if File.zero?(solo) then
+    puts "FATAL: #{solo} is empty, exiting."
+    exit 1
+  end 
   puts File.new(solo, 'r').read unless !opts.debug
 end
 
@@ -55,7 +60,6 @@ end
 if opts.json
   attributes = File.new(opts.json, "r").read
 else
-  require 'json'
   if File.file?('/etc/chef/node.json')
     node_file = '/etc/chef/node.json'
     attributes = JSON.parse(File.new(node_file, "r").read)
