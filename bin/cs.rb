@@ -56,19 +56,23 @@ else
   puts File.new(solo, 'r').read unless !opts.debug
 end
 
-# assign json
+# get json if available
 if opts.json
   attributes = File.new(opts.json, "r").read
 else
   if File.file?('/etc/chef/node.json')
     node_file = '/etc/chef/node.json'
     attributes = JSON.parse(File.new(node_file, "r").read)
-    chef_json = " -j #{node_file}"
   elsif File.file?("#{File.expand_path('~')}/node.json")
     node_file = "#{File.expand_path('~')}/node.json"
     attributes = JSON.parse(File.new("#{File.expand_path('~')}/node.json", "r").read)
-    chef_json = " -j #{node_file}"
+  else
+    node_file = File.file?("#{File.expand_path('~')}/node.json")
+    attributes = ''
+    require 'FileUtils'
+    FileUtils.touch(node_file)
   end
+  chef_json = " -j #{node_file}"
 end
 puts "    DEBUG:\n#{p attributes}" unless !opts.debug
 
@@ -133,6 +137,8 @@ end
 # prettify/json
 node_json = JSON.pretty_generate(attributes)
 puts "Node Attributes: \n #{node_json}" unless !opts.verbose
+
+# write back to node.json file
 fh = File.new(node_file, "w")
 fh.write(node_json)
 fh.close
