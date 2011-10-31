@@ -27,7 +27,7 @@ EOS
   opt :verbose,   "Verbose mode.",                                                        :short => "-v"                                        # flag --verbose, default false
   opt :debug,     "Debug mode."                                                                                                                 # flag --debug, default faulse
 end
-puts "    DEBUG: options: #{opts.to_json}" unless !(opts.verbose || opts.debug)
+puts "options: #{opts.to_json}" unless !(opts.verbose || opts.debug)
 
 solo = false
 server = false
@@ -73,7 +73,6 @@ else
   end
   chef_json = " -j #{node_file}"
 end
-puts "    DEBUG:\n#{p attributes}" unless !opts.debug
 
 # when a rs server is specified
 if opts.server
@@ -100,67 +99,74 @@ if opts.server
   # assign inputs from server params
   inputs = server.parameters
   puts "    DEBUG: #{JSON.pretty_generate(inputs)}" unless !opts.debug
-  inputs.each { |k,v|
-    if k.to_s =~ /^[A-Z]+$/
+  server_attributes = Hash.new
+  inputs.each { |input,v|
+    if inputs.to_s =~ /^[A-Z]+$/
       puts "    DEBUG: right_script input #{k} discarded." unless !opts.debug
     else
-      puts "    DEBUG: #{k} => #{v}" unless !opts.debug
-      keys = k.split("/")
+      puts "    DEBUG: #{input} => #{v}" unless !opts.debug
+      keys = input.split("/")
       if keys.count == 2
-        type = v.split(':')[0]
+        type = v.split(':')[0] 
         value = v.split(':')[1]
-        value = nil unless value != "$ignore"
+        value = '' unless value != "$ignore"
         if keys[0] != 'rightscale'
-          if !attributes.has_key?("#{keys[0]}")
-            puts "    DEBUG: Attribute #{keys[1]} detected for cookbook, #{keys[0]}." unless !opts.debug
-            attributes["#{keys[0]}"] = {}
-          end
-          puts "    DEBUG: [#{keys[0]}][#{keys[1]}] => type: #{type}" unless !opts.debug
+          puts "    DEBUG: node attribute #{keys[1]} detected for cookbook, #{keys[0]}." unless !opts.debug
+          puts "    DEBUG: attribute:#{keys[0]}[\"#{keys[1]}\"] type:#{type} value:#{value}" unless !opts.debug
+          puts "    DEBUG: [#{keys[0]}][#{keys[1]}] => type: #{type}" unless !opts.debug 
           puts "    DEBUG: [#{keys[0]}][#{keys[1]}] => value: #{value}" unless !opts.debug
-          #puts "[#{keys[0]}][#{keys[1]}] = #{value}"
-          attributes["#{keys[0]}"]["#{keys[1]}"] = "#{value}"
+          server_attributes["#{keys[0]}"] = {} unless server_attributes["#{keys[0]}"]
+          server_attributes["#{keys[0]}"]["#{keys[1]}"] = "#{value}"
         end
       end
     end
   }
+  puts "    DEBUG:\n#{p server_attributes}" unless !opts.debug
+
+end
+
+if server_attributes
+  puts server_attributes.to_json
+  puts '    DEBUG: Merging attributes.' unless !opts.debug
+  attributes = server_attributes.merge(attributes)
+else
+  puts '    DEBUG: No server attributes to merge.' unless !opts.verbose
 end
 
 if opts.run
-  # append runlist
+  # override runlist
   attributes['run_list'] = "#{opts.run}"
 end
 
-# TODO: logic to check node.json
-
-# write attributes to node.json
-# prettify/json
+# write attributes back to node.json
 node_json = JSON.pretty_generate(attributes)
 puts "Node Attributes: \n #{node_json}" unless !opts.verbose
-
 # write back to node.json file
 fh = File.new(node_file, "w")
 fh.write(node_json)
 fh.close
 
-puts "    DEBUG:\n#{p attributes}" unless !opts.debug
+# prepare options
+chef_config = " -c #{opts.config}" unless !opts.config
+chef_json = " -j #{opts.json}" unless !opts.json
+
+# depict if sandbox chef-solo binary is used
+if opts.sandbox
+  cs = '/opt/rightscale/sandbox/bin/chef-solo'
+else
+  cs = 'chef-solo'
+end
+
+# build chef solo command
+cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
+puts "    DEBUG: #{cmd}" unless !(opts.debug || opts.verbose)
 
 # import chef
 puts 'Importing Chef RubyGem.' unless !opts.verbose
 require 'chef'
 
-chef_config = " -c #{opts.config}" unless !opts.config
-chef_json = " -j #{opts.json}" unless !opts.json
-
-cs = 'chef-solo'
-if opts.sandbox
-  cs = '/opt/rightscale/sandbox/bin/chef-solo'
-end
-
-cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
-puts "    DEBUG: #{cmd}" unless !opts.debug
-
 # finally, run chef-solo
-puts 'Starting Chef Solo.' unless !opts.verbose
+puts 'Starting Chef Solo.' unless !(opts.verbose || opts.debug)
 unless opts.dry
   system(cmd)
 else
