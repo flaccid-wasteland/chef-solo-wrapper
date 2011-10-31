@@ -69,8 +69,7 @@ else
   else
     node_file = File.file?("#{File.expand_path('~')}/node.json")
     attributes = ''
-    require 'FileUtils'
-    FileUtils.touch(node_file)
+    system("touch #{node_file}")
   end
   chef_json = " -j #{node_file}"
 end
