@@ -31,10 +31,23 @@ puts "    DEBUG: #{opts.to_json}" unless !opts.debug
 server = false
 attributes = Hash.new
 
+# ensure a solo.rb exists for run
+solo = false
 if File.file?('/etc/chef/solo.rb')
-  puts File.new('/etc/chef/solo.rb', "r").read unless !opts.debug
+  solo = '/etc/chef/solo.rb'
+else
+  puts '/etc/chef/solo.rb: not found.' unless !opts.debug
 end
+if File.file?('~/solo.rb')
+  solo = '~/solo.rb'
+else
+  puts '~/solo.rb: not found.' unless !opts.debug
+end
+exit 1 unless solo
+puts 'Using #{solo}.' unless !opts.debug
+puts File.new(solo, 'r').read unless !opts.debug
 
+# assign json
 if opts.json
   attributes = File.new(opts.json, "r").read
 else
@@ -52,19 +65,27 @@ puts "    DEBUG:\n#{p attributes}" unless !opts.debug
 
 # when a rs server is specified
 if opts.server
+
   # import rest_connection
   puts 'Importing RestConnection RubyGem.' unless !opts.verbose
   require 'rest_connection'
+
+  # fetch server via rest_connection
   if opts.server.to_i > 0
-    server = Server.find(opts.server)
+    puts "Finding server: #{opts.server}."
+    server = Server.find("#{opts.server}")
   else
     puts "Finding server: '%#{opts.server}%'"
     server = Server.find(:first) { |s| s.nickname =~ /#{opts.server}/ }
   end
   puts "Found server, '#{server.nickname}'."
   puts server.to_yaml unless !opts.verbose
+  
+  # get current instance of server
   server.reload_current
   puts JSON.pretty_generate(server.settings) unless !opts.debug
+
+  # assign inputs from server params
   inputs = server.parameters
   puts "    DEBUG: #{JSON.pretty_generate(inputs)}" unless !opts.debug
   inputs.each { |k,v|
@@ -123,5 +144,10 @@ cmd = "#{cs} #{chef_config}#{chef_json} || ( echo 'Chef run failed!'; cat /var/c
 puts "    DEBUG: #{cmd}" unless !opts.debug
 
 # finally, run chef-solo
-puts 'Starting Chef Solo.' unless !opts.verbose or opts.dry
-system(cmd) unless opts.dry
+puts 'Starting Chef Solo.' unless !opts.verbose
+if ! opts.dry
+  system(cmd) unless opts.dry
+else
+  puts 'Dry run only, exiting.'
+  exit
+end
