@@ -44,7 +44,7 @@ else
   puts '    DEBUG: ~/solo.rb: not found.' unless !opts.debug
 end
 unless solo
-  puts 'FATAL: No solo.rb file found, exiting.'
+  puts 'FATAL: No solo.rb file found (see http://wiki.opscode.com/display/chef/Chef+Solo), exiting.'
   exit 1
 else
   puts "==> Using #{solo}." unless !opts.debug
