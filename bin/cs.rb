@@ -32,6 +32,7 @@ server = false
 attributes = Hash.new
 
 # ensure a solo.rb exists for run
+puts
 solo = false
 if File.file?('/etc/chef/solo.rb')
   solo = '/etc/chef/solo.rb'
@@ -43,9 +44,14 @@ if File.file?('~/solo.rb')
 else
   puts '~/solo.rb: not found.' unless !opts.debug
 end
-exit 1 unless solo
-puts 'Using #{solo}.' unless !opts.debug
-puts File.new(solo, 'r').read unless !opts.debug
+unless solo
+  puts 'No solo.rb file found.'
+  exit 1
+else
+  puts "==> Using #{solo}." unless !opts.debug
+  puts File.new(solo, 'r').read unless !opts.debug
+end
+puts
 
 # assign json
 if opts.json
