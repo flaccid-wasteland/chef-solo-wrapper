@@ -16,15 +16,16 @@ Usage:
        cs [options]
 where [options] are:
 EOS
-  opt :server,    "Use attribute data from a RightScale server by nickname or ID.",       :short => "-s", :type => String   # flag --server, default false
-  opt :sandbox,   "Use the Ruby environment in the local RightLink sandbox."                                         
-  opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                    # flag --config, default false
-  opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String   # flag --json, default false
-  opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                    # flag --dry, default false
-  opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String   # flag --run, default false
-  opt :write,     "Write back to local JSON file.",                                       :short => "-w"                   # flag --write, default false
-  opt :verbose,   "Verbose mode.",                                                        :short => "-v"                   # flag --verbose, default false
-  opt :debug,     "Debug mode."                                                                                             # flag --debug, default faulse
+  opt :server,    "Use attribute data from a RightScale server by nickname or ID.",       :short => "-s", :type => String                       # flag --server, default false
+  opt :sandbox,   "Use the Ruby environment in the local RightLink sandbox."                                                                    # flag --sandbox, default false
+  opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                                        # flag --config, default false
+  opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String                       # flag --json, default false
+  opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                                        # flag --dry, default false
+  opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String                       # flag --run, default false
+  opt :write,     "Write back to local JSON file.",                                       :short => "-w"                                        # flag --write, default false
+  opt :loglevel,  "The Chef log level to use: debug, info, warn, error, fatal",           :short => "-l", :default => "info", :type => String   # flag --loglevel, default info
+  opt :verbose,   "Verbose mode.",                                                        :short => "-v"                                        # flag --verbose, default false
+  opt :debug,     "Debug mode."                                                                                                                 # flag --debug, default faulse
 end
 puts "    DEBUG: #{opts.to_json}" unless !opts.debug
 
@@ -122,6 +123,8 @@ if opts.run
   attributes['run_list'] = "#{opts.run}"
 end
 
+# TODO: logic to check node.json
+
 # write attributes to node.json
 # prettify/json
 node_json = JSON.pretty_generate(attributes)
@@ -136,7 +139,7 @@ puts "    DEBUG:\n#{p attributes}" unless !opts.debug
 puts 'Importing Chef RubyGem.' unless !opts.verbose
 require 'chef'
 
-chef_config = " -c #{opts.config}" unless !opts.config
+chef_config = "-c #{opts.config}" unless !opts.config
 chef_json = " -j #{opts.json}" unless !opts.json
 
 cs = 'chef-solo'
@@ -144,7 +147,7 @@ if opts.sandbox
   cs = '/opt/rightscale/sandbox/bin/chef-solo'
 end
 
-cmd = "#{cs} #{chef_config}#{chef_json} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
+cmd = "#{cs} #{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
 puts "    DEBUG: #{cmd}" unless !opts.debug
 
 # finally, run chef-solo
