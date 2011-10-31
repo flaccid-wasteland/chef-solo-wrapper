@@ -37,15 +37,15 @@ solo = false
 if File.file?('/etc/chef/solo.rb')
   solo = '/etc/chef/solo.rb'
 else
-  puts '/etc/chef/solo.rb: not found.' unless !opts.debug
+  puts '    DEBUG: /etc/chef/solo.rb: not found.' unless !opts.debug
 end
 if File.file?('~/solo.rb')
   solo = '~/solo.rb'
 else
-  puts '~/solo.rb: not found.' unless !opts.debug
+  puts '    DEBUG: ~/solo.rb: not found.' unless !opts.debug
 end
 unless solo
-  puts 'No solo.rb file found.'
+  puts 'FATAL: No solo.rb file found, exiting.'
   exit 1
 else
   puts "==> Using #{solo}." unless !opts.debug
