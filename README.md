@@ -24,7 +24,7 @@ For RightScale integration, an active RightScale user account is required.
 
 If your Ruby/Chef environment is not yet setup or your are using a fresh virtual machine or instance, follow the generic steps below.
 
-### Install Ruby & RubyGems ==
+### Install Ruby & RubyGems
 
 #### Debian/Ubuntu
 
@@ -34,7 +34,7 @@ If your Ruby/Chef environment is not yet setup or your are using a fresh virtual
 
     Ruby and RubyGems is preinstalled.
 
-### Install Chef ==
+### Install Chef
 
 #### RHEL/EL/CentOS
 
@@ -108,6 +108,8 @@ Ensure you have configured ~/.rest_connection for use with your RightScale accou
 
 ### Checkout Chef Cookbooks
 
+Don't have any cookbooks on your host to play cook with? Check some out quickly:
+
     mkdir -p ~/src/cookbooks
     cd ~/src/cookbooks
     git clone git://github.com/flaccid/cookbooks_public.git
@@ -123,7 +125,12 @@ Ensure you have configured ~/.rest_connection for use with your RightScale accou
 	# edit with a text editor
 	nano /etc/chef/solo.rb
 
-### First Chef Solo run ==
+## First Chef Solo Run
+
+### Test chef_solo_wrapper (print version only)
 
     cs -v
-    chef-solo
+    
+### Test chef-solo
+
+chef-solo
