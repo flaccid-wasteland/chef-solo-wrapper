@@ -32,7 +32,7 @@ If your Ruby/Chef environment is not yet setup or your are using a fresh virtual
 
 #### Mac OS X
 
-    Ruby and RubyGems is preinstalled.
+Ruby and RubyGems is preinstalled.
 
 ### Install Chef
 
