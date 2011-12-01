@@ -200,19 +200,19 @@ You may also like to test chef-solo by itself:
 
 Note: Some of these examples still require testing and may be subject to change.
 
-## Standard chef-solo-wrapper run
+### Standard chef-solo-wrapper run
 
     cs
 
-### Alternate Chef run_list
+alternate Chef run_list:
 
     cs --run "recipe[foo::bar]"
 
-### Alternate Chef config file
+alternate Chef config file:
 
     cs --config /etc/chef/solo-dev.rb
 
-### Alternate Chef JSON data
+alternate Chef JSON data:
 
 	cs --json /etc/chef/node-dev.json
 	
@@ -226,20 +226,27 @@ Note: Some of these examples still require testing and may be subject to change.
 	
 ### Using a RightScale Server's inputs for attributes
 
-#### With the RightLink sandbox
+With the RightLink sandbox:
+
 	cs --server 1234 --sandbox
-#### And then saving the attributes
+
+and then saving the attributes:
+
 	cs --server 1234 --sandbox --write
-#### And then locally with the saved attributes
+
+and then locally with the saved attributes:
+
 	cs
-#### And then locally with the rightlink sandbox
+
+and then locally with the rightlink sandbox:
+
 	cs --sandbox
 
 ### Run chef-solo-wrapper with verbose
 
 	cs -v
 
-### Run chef-solo-wrapper with verbose and debug
+with verbose and debug:
 
     cs --v --debug
 	
@@ -247,7 +254,7 @@ Note: Some of these examples still require testing and may be subject to change.
 
     cs --dry
 
-#### Including verbose and debug modes with a chef debug log_level
+Including verbose and debug modes with a chef debug log_level:
 
     cs --dry --debug --verbose --loglevel debug
 
