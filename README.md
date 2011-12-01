@@ -216,29 +216,29 @@ alternate Chef JSON data:
 
 	cs --json /etc/chef/node-dev.json
 	
-### Using the Ruby and Chef in the RightLink sandbox
+### With the Ruby and Chef in the RightLink sandbox
 
 	cs --sandbox
+
+Note: The host must have RightScale RightLink installed and running.
 
 ### Using a RightScale Server's inputs for attributes
 
 	cs --server 1234
-	
-### Using a RightScale Server's inputs for attributes
 
-With the RightLink sandbox:
+and with the RightLink sandbox:
 
 	cs --server 1234 --sandbox
 
-and then saving the attributes:
+and then also saving the attributes:
 
 	cs --server 1234 --sandbox --write
 
-and then locally with the saved attributes:
+then with the system's chef-solo and the saved attributes:
 
 	cs
 
-and then locally with the rightlink sandbox:
+then also with the rightlink sandbox:
 
 	cs --sandbox
 
