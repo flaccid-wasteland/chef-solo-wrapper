@@ -150,7 +150,24 @@ This example uses the cookbooks_public repository from above. Modify as required
 
     cs -v
     
+You should see a run similar to:
+
+	chef-solo-wrapper 0.0.1.
+	options: {"sandbox":false,"run":null,"debug":false,"version":false,"config":false,"json":null,"write":false,"help":false,"dry":false,"server":null,"loglevel":"info","verbose_given":true,"verbose":true}
+	Importing Chef RubyGem.
+	Starting Chef Solo.
+	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: *** Chef 0.10.4 ***
+	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Run List is []
+	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Run List expands to []
+	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Starting Chef Run for 01-3m8hh9j.localdomain
+	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Chef Run complete in 0.071469 seconds
+	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Running report handlers
+	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Report handlers complete
+
+
 ### Test chef-solo
+
+You may also like to test chef-solo but itself.
 
 	chef-solo
 	
