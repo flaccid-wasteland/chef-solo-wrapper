@@ -1,14 +1,15 @@
 #!/usr/bin/ruby
 
 # chef-solo-wrapper (cs)
-puts 'chef-solo-wrapper 0.0.1.'
+
+CHEF_SOLO_WRAPPER_VERSION = '0.0.1'
 
 require 'rubygems'
 require 'trollop'
 require 'json'
 
 opts = Trollop::options do
-	version "chef-solo-wrapper (c) 2011 Chris Fordham"
+	version 'chef-solo-wrapper '+CHEF_SOLO_WRAPPER_VERSION+' (c) 2011 Chris Fordham'
 	banner <<-EOS
 A CLI wrapper for Chef Solo w/ RightScale integration.
 
@@ -26,8 +27,9 @@ EOS
   opt :loglevel,  "The Chef log level to use: debug, info, warn, error, fatal",           :short => "-l", :default => "info", :type => String   # flag --loglevel, default info
   opt :verbose,   "Verbose mode.",                                                        :short => "-v"                                        # flag --verbose, default false
   opt :debug,     "Debug mode."                                                                                                                 # flag --debug, default faulse
+  opt :help, 	  "Print usage info and exit.",                                       	  :short => "-h"
 end
-puts "options: #{opts.to_json}" unless !(opts.verbose || opts.debug)
+puts "options: #{opts.to_json}" unless !(opts.verbose || opts.debug and !opts.help)
 
 solo = false
 server = false
