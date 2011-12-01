@@ -81,9 +81,13 @@ If the Chef packaged in your distribution is considered old e.g. Ubuntu 10.04 us
 
     sudo yum -y install git
 
-#### Debian/Ubuntu
+#### Debian
 
-    sudo apt-get -y install git
+    sudo apt-get -y install git git-core
+
+#### Ubuntu
+
+    sudo apt-get -y install git-core
 
 #### Mac OS X
 
@@ -94,6 +98,7 @@ Use http://code.google.com/p/git-osx-installer/
     gem install rest_connection trollop --no-rdoc --no-ri
 
 Ensure you have configured ~/.rest_connection for use with your RightScale account.
+For more information, see http://support.rightscale.com/12-Guides/03-RightScale_API/Ruby_RestConnection_Helper
 	
 ### Test installed RubyGems
 
@@ -101,9 +106,12 @@ Ensure you have configured ~/.rest_connection for use with your RightScale accou
 
 ### Setup Chef Solo
 
+Configure Chef and Chef Solo as required, see http://wiki.opscode.com/display/chef/Chef+Solo
+Run the below commands to ensure the required directorys and files exist.
+
     mkdir -p /etc/chef /var/chef/cache /var/chef/cookbooks /var/chef/site-cookbooks /var/chef-solo
     touch /etc/chef/solo.rb
-    echo "{}" > /etc/chef/node.json     # empty json
+    [ -e /etc/chef/node.json ] || echo "{}" > /etc/chef/node.json     # empty json
     touch /var/chef-solo/chef-stacktrace.out
 	
 ### Install chef_solo_wrapper
@@ -124,6 +132,8 @@ Don't have any cookbooks on your host to play cook with? Check some out quickly:
     git clone git://github.com/flaccid/cookbooks_public.git
 
 ### Configure cookbooks for Chef Solo
+
+This example uses the cookbooks_public repository from above. Modify as required for your configuration.
 
     cat <<EOF> /etc/chef/solo.rb
     file_cache_path "/var/chef-solo"
