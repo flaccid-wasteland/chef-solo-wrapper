@@ -4,7 +4,7 @@ A basic wrapper for chef-solo with RightScale integration.
 
 # Requirements
 
-* Linux,OS X or a flavour of *nix (untested on Microsoft Windows)
+* Linux, OS X or a flavour of *nix (untested on Microsoft Windows)
 * Ruby
 * RubyGems
 * Trollop RubyGem
@@ -30,6 +30,16 @@ If your Ruby/Chef environment is not yet setup or your are using a fresh virtual
 
     sudo apt-get -y install ruby rubygems
 
+#### RHEL/EL/CentOS
+
+    sudo yum -y install ruby rubygems
+
+#### Arch Linux
+
+	pacman -S ruby
+
+For more info see https://wiki.archlinux.org/index.php/Ruby
+
 #### Mac OS X
 
 Ruby and RubyGems is preinstalled.
@@ -38,7 +48,7 @@ Ruby and RubyGems is preinstalled.
 
 #### RHEL/EL/CentOS
 
-    sudo yum -y install chef ruby rubygems
+    sudo yum -y install chef
 
 #### Debian
 
