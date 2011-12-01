@@ -128,7 +128,7 @@ if server_attributes
   puts '    DEBUG: Merging attributes.' unless !opts.debug
   attributes = server_attributes.merge(attributes)
 else
-  puts '    DEBUG: No server attributes to merge.' unless !opts.verbose
+  puts '    DEBUG: No server attributes to merge.' unless !opts.debug
 end
 
 if opts.run
@@ -138,7 +138,7 @@ end
 
 # write attributes back to node.json
 node_json = JSON.pretty_generate(attributes)
-puts "Node Attributes: \n #{node_json}" unless !opts.verbose
+puts "Node Attributes: \n #{node_json}" unless !opts.debug
 # write back to node.json file
 fh = File.new(node_file, "w")
 fh.write(node_json)
@@ -157,7 +157,7 @@ end
 
 # build chef solo command
 cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
-puts "    DEBUG: #{cmd}" unless !(opts.debug || opts.verbose)
+puts "    DEBUG: running #{cmd}" unless !(opts.debug || opts.debug)
 
 # import chef
 puts 'Importing Chef RubyGem.' unless !opts.verbose
