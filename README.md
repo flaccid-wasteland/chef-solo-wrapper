@@ -219,8 +219,12 @@ alternate Chef JSON data:
 ### With the Ruby and Chef in the RightLink sandbox
 
 	cs --sandbox
+	
+with debug,verbose and Chef debug log_level:
 
-Note: The host must have RightScale RightLink installed and running.
+    cs -v --debug --sandbox --loglevel debug
+
+Note: The host system must have RightScale RightLink installed.
 
 ### Using a RightScale Server's inputs for attributes
 
@@ -230,7 +234,7 @@ and with the RightLink sandbox:
 
 	cs --server 1234 --sandbox
 
-and then also saving the attributes:
+and then also saving the attributes locally:
 
 	cs --server 1234 --sandbox --write
 
@@ -250,7 +254,7 @@ with verbose and debug:
 
     cs --v --debug
 	
-### Run chef-solo-wrapper with a dry run
+### Run chef-solo-wrapper as a dry run
 
     cs --dry
 
