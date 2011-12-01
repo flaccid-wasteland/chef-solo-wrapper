@@ -146,7 +146,9 @@ This example uses the cookbooks_public repository from above. Modify as required
 
 ## First Chef Solo Run
 
-### Test chef_solo_wrapper (print version only)
+### Test chef_solo_wrapper
+
+This prints the chef-solo-wrapper version only which is handy for testing the stack. See the examples for practical usage.
 
     cs -v
     
@@ -164,10 +166,9 @@ You should see a run similar to:
 	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Running report handlers
 	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Report handlers complete
 
-
 ### Test chef-solo
 
-You may also like to test chef-solo but itself.
+You may also like to test chef-solo but itself:
 
 	chef-solo
 	
