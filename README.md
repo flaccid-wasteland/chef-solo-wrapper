@@ -11,6 +11,28 @@ A basic wrapper for chef-solo with RightScale integration.
 * Chef (latest 0.10 recommended)
 * RestConnection (optional, for RightScale API support)
 
+# Installation
+
+See Quick Start below. More install methods coming.
+
+# Usage
+
+	Usage:
+		   cs [options]
+	where [options] are:
+		--server, -s <s>:   Use attribute data from a RightScale server by nickname or ID.
+		   --sandbox, -a:   Use the Ruby environment in the local RightLink sandbox.
+		    --config, -c:   Use alternate Chef Solo configuration (default used, ~/solo.rb.)
+		  --json, -j <s>:   Use alternate Chef Solo JSON data (default used, ~/node.json.)
+		       --dry, -d:   Dry run only, don't run chef-solo.
+		   --run, -r <s>:   Use alernative run_list for chef-solo run.
+		     --write, -w:   Write back to local JSON file.
+	  --loglevel, -l <s>:   The Chef log level to use: debug, info, warn, error, fatal (default: info)
+		   --verbose, -v:   Verbose mode.
+		     --debug, -e:   Debug mode.
+		      --help, -h:   Print usage info and exit.
+		   --version, -i:   Print version and exit
+
 # Quick Start
 
 This demonstrates how to prepare a node for testing cookbooks with chef-solo. Skip any steps not required on your host.
@@ -148,7 +170,7 @@ This example uses the cookbooks_public repository from above. Modify as required
 
 ### Test chef_solo_wrapper
 
-This prints the chef-solo-wrapper usage info only which is handy for testing the stack.
+This prints the chef-solo-wrapper usage info only which is handy for testing the stack:
 
     cs -v
     
@@ -170,14 +192,68 @@ See the examples for practical usage.
 
 ### Test chef-solo
 
-You may also like to test chef-solo but itself:
+You may also like to test chef-solo by itself:
 
 	chef-solo
 
 ## Usage Examples
 
-### List version information
+Note: Some of these examples still require testing and may be subject to change.
 
+## Standard chef-solo-wrapper run
+
+    cs
+
+### Alternate Chef run_list
+
+    cs --run "recipe[foo::bar]"
+
+### Alternate Chef config file
+
+    cs --config /etc/chef/solo-dev.rb
+
+### Alternate Chef JSON data
+
+	cs --json /etc/chef/node-dev.json
+	
+### Using the Ruby and Chef in the RightLink sandbox
+
+	cs --sandbox
+
+### Using a RightScale Server's inputs for attributes
+
+	cs --server 1234
+	
+### Using a RightScale Server's inputs for attributes
+
+#### With the RightLink sandbox
+	cs --server 1234 --sandbox
+#### And then saving the attributes
+	cs --server 1234 --sandbox --write
+#### And then locally with the saved attributes
+	cs
+#### And then locally with the rightlink sandbox
+	cs --sandbox
+
+### Run chef-solo-wrapper with verbose
+
+	cs -v
+
+### Run chef-solo-wrapper with verbose and debug
+
+    cs --v --debug
+	
+### Run chef-solo-wrapper with a dry run
+
+    cs --dry
+
+#### Including verbose and debug modes with a chef debug log_level
+
+    cs --dry --debug --verbose --loglevel debug
+
+### Print usage info and exit
+
+	cs -h
 
 # License and Author
 
