@@ -97,7 +97,7 @@ Use http://code.google.com/p/git-osx-installer/
 
     gem install rest_connection trollop --no-rdoc --no-ri
 
-Ensure you have configured ~/.rest_connection for use with your RightScale account.
+Ensure you have configured `~/.rest_connection` for use with your RightScale account.
 For more information, see http://support.rightscale.com/12-Guides/03-RightScale_API/Ruby_RestConnection_Helper
 	
 ### Test installed RubyGems
@@ -148,7 +148,7 @@ This example uses the cookbooks_public repository from above. Modify as required
 
 ### Test chef_solo_wrapper
 
-This prints the chef-solo-wrapper version only which is handy for testing the stack. See the examples for practical usage.
+This prints the chef-solo-wrapper usage info only which is handy for testing the stack.
 
     cs -v
     
@@ -166,12 +166,19 @@ You should see a run similar to:
 	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Running report handlers
 	[Thu, 01 Dec 2011 07:34:05 +0000] INFO: Report handlers complete
 
+See the examples for practical usage.
+
 ### Test chef-solo
 
 You may also like to test chef-solo but itself:
 
 	chef-solo
-	
+
+## Usage Examples
+
+### List version information
+
+
 # License and Author
 
 Author:: [Chris Fordham][flaccid] (<chris@xhost.com.au>)
