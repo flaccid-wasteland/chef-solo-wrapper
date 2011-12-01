@@ -46,6 +46,8 @@ Ruby and RubyGems is preinstalled.
 
 ### Install Chef
 
+If the Chef packaged in your distribution is considered old e.g. Ubuntu 10.04 uses Chef 0.7, use the RubyGem install method (below).
+
 #### RHEL/EL/CentOS
 
     sudo yum -y install chef
@@ -73,11 +75,6 @@ Ruby and RubyGems is preinstalled.
 
     gem install chef --no-rdoc --no-ri
 
-### Create chef folders	
-
-    mkdir -p /etc/chef
-    mkdir -p /var/chef/cache
-
 ### Install Git
 
 #### RHEL/EL/CentOS
@@ -103,13 +100,15 @@ Ensure you have configured ~/.rest_connection for use with your RightScale accou
     ( ruby -e "require 'rubygems'; require 'chef'; require 'rest_connection'; require 'trollop'" && echo 'RubyGems test passed.' ) || echo 'RubyGems test failed!'
 
 ### Setup Chef Solo
- 
-    mkdir -p /etc/chef /var/chef/cookbooks /var/chef/site-cookbooks /var/chef-solo
+
+    mkdir -p /etc/chef /var/chef/cache /var/chef/cookbooks /var/chef/site-cookbooks /var/chef-solo
     touch /etc/chef/solo.rb
     echo "{}" > /etc/chef/node.json     # empty json
     touch /var/chef-solo/chef-stacktrace.out
 	
 ### Install chef_solo_wrapper
+
+#### Using Git
 
     mkdir -p ~/src && cd ~/src
     git clone git://github.com/flaccid/chef-solo-wrapper.git
