@@ -153,13 +153,15 @@ if opts.run
   attributes['run_list'] = "#{opts.run}"
 end
 
-# write attributes back to node.json
-node_json = JSON.pretty_generate(attributes)
-puts "Node Attributes: \n #{node_json}" unless !opts.debug
-# write back to node.json file
-fh = File.new(node_file, "w")
-fh.write(node_json)
-fh.close
+# write attributes back to local node.json
+if opts.write and server_attributes
+	node_json = JSON.pretty_generate(attributes)
+	puts "Node Attributes: \n #{node_json}" unless !opts.debug
+	# open file for write back
+	fh = File.new(node_file, "w")
+	fh.write(node_json)
+	fh.close
+end
 
 # prepare options
 chef_config = " -c #{opts.config}" unless !opts.config
@@ -174,11 +176,15 @@ end
 
 # build chef solo command
 cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
-puts "    DEBUG: running #{cmd}" unless !(opts.debug || opts.debug)
+puts "    DEBUG: running #{cmd}" unless !opts.debug
 
 # import chef
 puts 'Importing Chef RubyGem.' unless !opts.verbose
 require 'chef'
+
+# prepend sudo if not run as root
+cmd.insert(0, 'sudo ') unless Process.uid == 0
+puts "    DEBUG: Non-root user, appending sudo (#{cmd})." unless !opts.debug
 
 # finally, run chef-solo
 puts 'Starting Chef Solo.' unless !(opts.verbose || opts.debug)
