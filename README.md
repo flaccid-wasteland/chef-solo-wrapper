@@ -4,7 +4,7 @@ A basic wrapper for chef-solo with RightScale integration.
 
 # Requirements
 
-* Linux, OS X or a flavour of *nix (untested on Microsoft Windows)
+* Linux, Mac OS X or a flavour of *nix (untested on Microsoft Windows)
 * Ruby
 * RubyGems
 * Trollop RubyGem
@@ -115,11 +115,20 @@ If the Chef packaged in your distribution is considered old e.g. Ubuntu 10.04 us
 
 Use http://code.google.com/p/git-osx-installer/
 
+#### Arch Linux
+
+    pacman -S git
+    
+Also ensure that inetutils is installed so the hostname command is available for Ohai:
+
+	pacman -S inetutils
+
 ### Install RestConnection && Trollop
 
+    mkdir -p "$HOME/.rest_connection"
     gem install rest_connection trollop --no-rdoc --no-ri
 
-Ensure you have configured `~/.rest_connection` for use with your RightScale account.
+Ensure you have configured `~/.rest_connection/rest_api_config.yaml` for use with your RightScale account.
 For more information, see http://support.rightscale.com/12-Guides/03-RightScale_API/Ruby_RestConnection_Helper
 	
 ### Test installed RubyGems
@@ -129,12 +138,12 @@ For more information, see http://support.rightscale.com/12-Guides/03-RightScale_
 ### Setup Chef Solo
 
 Configure Chef and Chef Solo as required, see http://wiki.opscode.com/display/chef/Chef+Solo
-Run the below commands to ensure the required directorys and files exist.
+Run the below commands to ensure the required directorys and files exist (root usually required):
 
     mkdir -p /etc/chef /var/chef/cache /var/chef/cookbooks /var/chef/site-cookbooks /var/chef-solo
-    touch /etc/chef/solo.rb
-    [ -e /etc/chef/node.json ] || echo "{}" > /etc/chef/node.json     # empty json
-    touch /var/chef-solo/chef-stacktrace.out
+    sudo touch /etc/chef/solo.rb
+    [ -e /etc/chef/node.json ] || echo "{node:{}}" > /etc/chef/node.json     # empty json with node key
+    sudo touch /var/chef-solo/chef-stacktrace.out
 	
 ### Install chef_solo_wrapper
 
@@ -143,7 +152,10 @@ Run the below commands to ensure the required directorys and files exist.
     mkdir -p ~/src && cd ~/src
     git clone git://github.com/flaccid/chef-solo-wrapper.git
     chmod +x ~/src/chef-solo-wrapper/bin/cs.rb
-    ln -fsv ~/src/chef-solo-wrapper/bin/cs.rb /usr/local/bin/cs
+    sudo ln -fsv "$HOME/src/chef-solo-wrapper/bin/cs.rb" /usr/local/bin/cs
+
+Ensure that /usr/local/bin is in your PATH. When using Bash, this can be done on most platforms if not already set:
+	( grep PATH ~/.bashrc | grep /usr/local/bin ) || echo 'PATH=$PATH:/usr/local/bin' >> ~/.bashrc
 
 ### Checkout Chef Cookbooks
 
@@ -156,6 +168,7 @@ Don't have any cookbooks on your host to play cook with? Check some out quickly:
 ### Configure cookbooks for Chef Solo
 
 This example uses the cookbooks_public repository from above. Modify as required for your configuration.
+Requires root.
 
     cat <<EOF> /etc/chef/solo.rb
     file_cache_path "/var/chef-solo"
@@ -194,10 +207,11 @@ See the examples for practical usage.
 
 You may also like to test chef-solo by itself:
 
-	chef-solo
+	sudo chef-solo
 
 ## Usage Examples
 
+Chef/Solo is intended to be run under root. When chef-solo-wrapper is run without root, sudo will automatically be prepended to the chef-solo command (ensure sudo is configured correctly if not using root directly).
 Note: Some of these examples still require testing and may be subject to change.
 
 ### Standard chef-solo-wrapper run
