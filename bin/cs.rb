@@ -183,8 +183,10 @@ puts 'Importing Chef RubyGem.' unless !opts.verbose
 require 'chef'
 
 # prepend sudo if not run as root
-cmd.insert(0, 'sudo ') unless Process.uid == 0
-puts "    DEBUG: Non-root user, appending sudo (#{cmd})." unless !opts.debug
+if Process.uid != 0 
+	cmd.insert(0, 'sudo ') 
+	puts "    DEBUG: Non-root user, appending sudo (#{cmd})." unless !opts.debug
+end
 
 # finally, run chef-solo
 puts 'Starting Chef Solo.' unless !(opts.verbose || opts.debug)
