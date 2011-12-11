@@ -89,6 +89,8 @@ If the Chef packaged in your distribution is considered old e.g. Ubuntu 10.04 us
 
     sudo apt-get -y install chef
 
+Note: Ubuntu 10.04 LTS uses Chef 0.7.10 so install via RubyGem (below) is recommended.
+
 #### Mac OS X
 
     sudo gem install chef --no-rdoc --no-ri
@@ -119,7 +121,7 @@ Use http://code.google.com/p/git-osx-installer/
 
     pacman -S git
     
-Also ensure that inetutils is installed so the hostname command is available for Ohai:
+Also ensure that inetutils is installed so the hostname command is available to Ohai:
 
 	pacman -S inetutils
 
@@ -142,7 +144,7 @@ Run the below commands to ensure the required directorys and files exist (root u
 
     mkdir -p /etc/chef /var/chef/cache /var/chef/cookbooks /var/chef/site-cookbooks /var/chef-solo
     sudo touch /etc/chef/solo.rb
-    [ -e /etc/chef/node.json ] || echo "{node:{}}" > /etc/chef/node.json     # empty json with node key
+    [ -e /etc/chef/node.json ] || echo "{}" > /etc/chef/node.json     # empty json with node key
     sudo touch /var/chef-solo/chef-stacktrace.out
 	
 ### Install chef_solo_wrapper
@@ -154,8 +156,7 @@ Run the below commands to ensure the required directorys and files exist (root u
     chmod +x ~/src/chef-solo-wrapper/bin/cs.rb
     sudo ln -fsv "$HOME/src/chef-solo-wrapper/bin/cs.rb" /usr/local/bin/cs
 
-Ensure that /usr/local/bin is in your PATH. When using Bash, this can be done on most platforms if not already set:
-	( grep PATH ~/.bashrc | grep /usr/local/bin ) || echo 'PATH=$PATH:/usr/local/bin' >> ~/.bashrc
+Ensure that /usr/local/bin is in your PATH. When using Bash, this can be done on most platforms if not already set: `( grep PATH ~/.bashrc | grep /usr/local/bin ) || echo 'PATH=$PATH:/usr/local/bin' >> ~/.bashrc`
 
 ### Checkout Chef Cookbooks
 
