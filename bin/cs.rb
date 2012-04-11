@@ -1,14 +1,29 @@
 #!/usr/bin/ruby
 
 # chef-solo-wrapper (cs)
-puts 'chef-solo-wrapper 0.0.1.'
+#
+# Copyright 2011, Chris Fordham
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+CHEF_SOLO_WRAPPER_VERSION = '0.0.1'
 
 require 'rubygems'
 require 'trollop'
 require 'json'
 
 opts = Trollop::options do
-	version "chef-solo-wrapper (c) 2011 Chris Fordham"
+	version 'chef-solo-wrapper '+CHEF_SOLO_WRAPPER_VERSION+' (c) 2011 Chris Fordham'
 	banner <<-EOS
 A CLI wrapper for Chef Solo w/ RightScale integration.
 
@@ -26,8 +41,10 @@ EOS
   opt :loglevel,  "The Chef log level to use: debug, info, warn, error, fatal",           :short => "-l", :default => "info", :type => String   # flag --loglevel, default info
   opt :verbose,   "Verbose mode.",                                                        :short => "-v"                                        # flag --verbose, default false
   opt :debug,     "Debug mode."                                                                                                                 # flag --debug, default faulse
+  opt :help, 	  "Print usage info and exit.",                                       	  :short => "-h"
 end
-puts "options: #{opts.to_json}" unless !(opts.verbose || opts.debug)
+puts "options: #{opts.to_json}" unless !(opts.verbose || opts.debug and !opts.help)
+puts 'chef-solo-wrapper '+CHEF_SOLO_WRAPPER_VERSION
 
 solo = false
 server = false
@@ -128,7 +145,7 @@ if server_attributes
   puts '    DEBUG: Merging attributes.' unless !opts.debug
   attributes = server_attributes.merge(attributes)
 else
-  puts '    DEBUG: No server attributes to merge.' unless !opts.verbose
+  puts '    DEBUG: No server attributes to merge.' unless !opts.debug
 end
 
 if opts.run
@@ -136,13 +153,15 @@ if opts.run
   attributes['run_list'] = "#{opts.run}"
 end
 
-# write attributes back to node.json
-node_json = JSON.pretty_generate(attributes)
-puts "Node Attributes: \n #{node_json}" unless !opts.verbose
-# write back to node.json file
-fh = File.new(node_file, "w")
-fh.write(node_json)
-fh.close
+# write attributes back to local node.json
+if opts.write and server_attributes
+	node_json = JSON.pretty_generate(attributes)
+	puts "Node Attributes: \n #{node_json}" unless !opts.debug
+	# open file for write back
+	fh = File.new(node_file, "w")
+	fh.write(node_json)
+	fh.close
+end
 
 # prepare options
 chef_config = " -c #{opts.config}" unless !opts.config
@@ -157,11 +176,17 @@ end
 
 # build chef solo command
 cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
-puts "    DEBUG: #{cmd}" unless !(opts.debug || opts.verbose)
+puts "    DEBUG: running #{cmd}" unless !opts.debug
 
 # import chef
 puts 'Importing Chef RubyGem.' unless !opts.verbose
 require 'chef'
+
+# prepend sudo if not run as root
+if Process.uid != 0 
+	cmd.insert(0, 'sudo ') 
+	puts "    DEBUG: Non-root user, appending sudo (#{cmd})." unless !opts.debug
+end
 
 # finally, run chef-solo
 puts 'Starting Chef Solo.' unless !(opts.verbose || opts.debug)
