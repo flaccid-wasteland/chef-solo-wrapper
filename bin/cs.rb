@@ -82,7 +82,7 @@ if opts.server
   # fetch server via rest_connection
   if opts.server.to_i > 0
     puts "Finding server: #{opts.server}."
-    server = Server.find("#{opts.server}")
+    server = Server.find(opts.server)
   else
     puts "Finding server: '%#{opts.server}%'"
     server = Server.find(:first) { |s| s.nickname =~ /#{opts.server}/ }
