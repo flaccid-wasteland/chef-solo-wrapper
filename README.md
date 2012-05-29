@@ -143,10 +143,10 @@ Also ensure that inetutils is installed so the hostname command is available to 
 
 	pacman -S inetutils
 
-### Install RestConnection && Trollop
+### Install RestConnection & Trollop
 
     mkdir -p "$HOME/.rest_connection"
-    gem install rest_connection trollop --no-rdoc --no-ri
+    sudo gem install rest_connection trollop --no-rdoc --no-ri
 
 Ensure you have configured `~/.rest_connection/rest_api_config.yaml` for use with your RightScale account.
 For more information, see http://support.rightscale.com/12-Guides/03-RightScale_API/Ruby_RestConnection_Helper
@@ -158,14 +158,16 @@ For more information, see http://support.rightscale.com/12-Guides/03-RightScale_
 ### Setup Chef Solo
 
 Configure Chef and Chef Solo as required, see http://wiki.opscode.com/display/chef/Chef+Solo
-Run the below commands to ensure the required directorys and files exist (root usually required):
+Run the below commands (as root or using `sudo -i`) to ensure the required directories and files exist:
 
     mkdir -p /etc/chef /var/chef/cache /var/chef/cookbooks /var/chef/site-cookbooks /var/chef-solo
-    sudo touch /etc/chef/solo.rb
-    [ -e /etc/chef/node.json ] || echo "{}" > /etc/chef/node.json     # empty json with node key
-    sudo touch /var/chef-solo/chef-stacktrace.out
+    touch /etc/chef/solo.rb
+    [ -e /etc/chef/node.json ] || echo "{}" > /etc/chef/node.json     # empty json
+    touch /var/chef-solo/chef-stacktrace.out
 	
 ### Install chef_solo_wrapper
+
+Installation by RubyGem is recommended.
 
 #### RubyGem
 
@@ -184,9 +186,12 @@ Ensure that `/usr/local/bin` is in your `PATH`. When using Bash, this can be don
 
 Don't have any cookbooks on your host to play cook with? Check some out quickly:
 
-    mkdir -p ~/src/cookbooks
-    cd ~/src/cookbooks
-    git clone git://github.com/flaccid/cookbooks_public.git
+    mkdir -p "$HOME/src/cookbooks"
+    cd "$HOME/cookbooks"
+    ( [ -e "$HOME/src/cookbooks/cookbooks_public/.git" ] && cd "$HOME/src/cookbooks/cookbooks_public" && git pull ) || git clone git://github.com/flaccid/cookbooks_public.git
+	( [ -e "$HOME/src/cookbooks/cookbooks/.git" ] && cd "$HOME/src/cookbooks/cookbooks" && git pull ) || git clone git://github.com/flaccid/cookbooks.git
+	
+These are the same cookbook repositories used with the RightScale Linux Server RL 5.7 ServerTemplate (http://www.rightscale.com/library/server_templates/RightScale-Linux-Server-RL-5-7/lineage/13544)
 
 ### Configure cookbooks for Chef Solo
 
@@ -199,8 +204,23 @@ Requires root.
     json_attribs "/etc/chef/node.json"
     EOF
 
+and/or modify by hand
+
 	# edit with a text editor
 	nano /etc/chef/solo.rb
+	
+An example `solo.rb` matching the cookbooks from the RightScale Linux Server RL 5.7 ServerTemplate:
+
+	cat <<EOF> /etc/chef/solo.rb
+	file_cache_path "/var/chef-solo"
+	cookbook_path [ "/root/src/cookbooks/cookbooks_public/cookbooks", "/root/src/cookbooks/cookbooks/cookbooks" ]
+	json_attribs "/etc/chef/node.json"
+	EOF
+
+### Configure node.json for Chef Solo
+
+By default, when setting up Chef Solo above, /etc/chef/node.json is created as empty json.
+The command line options of chef-solo-wrapper (see usage examples below) can be used to provide this file, a run_list or override attributes, however do feel free to configure this file as required.
 
 ## First Chef Solo Run
 
@@ -208,7 +228,7 @@ Requires root.
 
 This prints the chef-solo-wrapper usage info only which is handy for testing the stack:
 
-    cs -v
+    sudo cs -v
     
 You should see a run similar to:
 
