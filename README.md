@@ -48,6 +48,8 @@ If your Ruby/Chef environment is not yet setup or your are using a fresh virtual
 
 ### Install Ruby & RubyGems
 
+Ensure your system has both Ruby and RubyGems available. If starting fresh, they can be installed easily:
+
 #### Debian/Ubuntu
 
     sudo apt-get -y install ruby rubygems
@@ -64,7 +66,7 @@ For more info see https://wiki.archlinux.org/index.php/Ruby
 
 #### Mac OS X
 
-Ruby and RubyGems is preinstalled.
+Ruby and RubyGems are preinstalled.
 
 ### Install Chef
 
@@ -149,7 +151,11 @@ Run the below commands to ensure the required directorys and files exist (root u
 	
 ### Install chef_solo_wrapper
 
-#### Using Git
+#### RubyGem
+
+	sudo gem install chef-solo-wrapper
+
+#### Using Git (devel)
 
     mkdir -p ~/src && cd ~/src
     git clone git://github.com/flaccid/chef-solo-wrapper.git
