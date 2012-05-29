@@ -195,27 +195,22 @@ These are the same cookbook repositories used with the RightScale Linux Server R
 
 ### Configure cookbooks for Chef Solo
 
-This example uses the cookbooks_public repository from above. Modify as required for your configuration.
-Requires root.
+Next, setup the `solo.rb` to be used with `chef-solo`. Modify `/etc/chef/solo.rb` as required for your configuration. Requires root.
 
-    cat <<EOF> /etc/chef/solo.rb
-    file_cache_path "/var/chef-solo"
-    cookbook_path "/root/src/cookbooks/cookbooks_public/cookbooks"
-    json_attribs "/etc/chef/node.json"
-    EOF
-
-and/or modify by hand
-
-	# edit with a text editor
-	nano /etc/chef/solo.rb
-	
-An example `solo.rb` matching the cookbooks from the RightScale Linux Server RL 5.7 ServerTemplate:
+An example `solo.rb` matching the cookbooks from the RightScale Linux Server RL 5.7 ServerTemplate installed above:
 
 	cat <<EOF> /etc/chef/solo.rb
 	file_cache_path "/var/chef-solo"
 	cookbook_path [ "/root/src/cookbooks/cookbooks_public/cookbooks", "/root/src/cookbooks/cookbooks/cookbooks" ]
 	json_attribs "/etc/chef/node.json"
 	EOF
+
+and/or modify by hand
+
+	# edit with a text editor
+	sudo nano /etc/chef/solo.rb
+
+For more information see http://wiki.opscode.com/display/chef/Chef+Solo
 
 ### Configure node.json for Chef Solo
 
