@@ -78,8 +78,9 @@ If the Chef packaged in your distribution is considered old e.g. Ubuntu 10.04 us
 
 #### Debian
 
-    codename=squeeze    # or the appropriate code name for your release
-    echo "deb http://apt.opscode.com/ $codename main" > /etc/apt/sources.list.d/opscode.list
+	codename=`lsb_release -cs`
+	#	codename=squeeze    # or the appropriate code name for your release
+	echo "deb http://apt.opscode.com/ $codename main" > /etc/apt/sources.list.d/opscode.list
     mkdir -p /etc/apt/trusted.gpg.d 
     gpg --keyserver keys.gnupg.net --recv-keys 83EF826A 
     gpg --export packages@opscode.com | tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null
@@ -91,7 +92,22 @@ If the Chef packaged in your distribution is considered old e.g. Ubuntu 10.04 us
 
     sudo apt-get -y install chef
 
-Note: Ubuntu 10.04 LTS uses Chef 0.7.10 so install via RubyGem (below) is recommended.
+Note: Ubuntu 10.04 LTS uses Chef 0.7.10 so install via Opscode Apt or RubyGem (below) is recommended.
+
+#### Opscode Apt
+
+This is particularly recommended for Debian-based distributions that don't have the chef package available in the particular release.
+
+	DEBIAN_FRONTEND=noninteractive
+	sudo mkdir -p /etc/apt/trusted.gpg.d
+	gpg --keyserver keys.gnupg.net --recv-keys 83EF826A
+	gpg --export packages@opscode.com | sudo tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null
+	echo "deb http://apt.opscode.com/ $(lsb_release -cs)-0.10 main" > /etc/apt/sources.list.d/opscode.list
+	sudo apt-get -y update
+	sudo apt-get -y upgrade
+	sudo apt-get -y install chef
+	
+For more information see http://wiki.opscode.com/display/chef/Installing+Chef+Client+on+Ubuntu+or+Debian#InstallingChefClientonUbuntuorDebian-PackageInstallation
 
 #### Mac OS X
 
