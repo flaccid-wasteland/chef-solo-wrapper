@@ -108,14 +108,12 @@ This is particularly recommended for Debian-based distributions that don't have 
 	sudo apt-get -y install chef
 	
 For more information see http://wiki.opscode.com/display/chef/Installing+Chef+Client+on+Ubuntu+or+Debian#InstallingChefClientonUbuntuorDebian-PackageInstallation
+	
+#### RubyGem (Mac OS X other supported platforms)
 
-#### Mac OS X
+Recommended when an OS/distribution does not supply a Chef binary package with its native package management (or you want the latest chef version by rubygem).
 
     sudo gem install chef --no-rdoc --no-ri
-	
-#### RubyGem (other supported platforms)
-
-    gem install chef --no-rdoc --no-ri
 
 ### Install Git
 
@@ -145,11 +143,23 @@ Also ensure that inetutils is installed so the hostname command is available to 
 
 ### Install RestConnection & Trollop
 
-    mkdir -p "$HOME/.rest_connection"
-    sudo gem install rest_connection trollop --no-rdoc --no-ri
+This is can be skipped when not using with RightScale.
+
+A RightScript is available for easy install on running RightScale servers (http://www.rightscale.com/library/right_scripts/Install-configure-RestConnecti/lineage/7495).
 
 Ensure you have configured `~/.rest_connection/rest_api_config.yaml` for use with your RightScale account.
 For more information, see http://support.rightscale.com/12-Guides/03-RightScale_API/Ruby_RestConnection_Helper
+
+    mkdir -p "$HOME/.rest_connection"
+    sudo gem install rest_connection trollop --no-rdoc --no-ri
+
+Note, you may need to install dependencies to build the native extensions on install, e.g.:
+
+	# on centos/el/redhat
+	yum -y install libxml2 libxml2-devel libxslt-devel
+	
+	# on ubuntu|debian
+	apt-get -y install libxml2 libxml2-dev libxslt-dev
 	
 ### Test installed RubyGems
 
@@ -172,6 +182,15 @@ Installation by RubyGem is recommended.
 #### RubyGem
 
 	sudo gem install chef-solo-wrapper
+	
+You may need to action this before hand:
+
+	sudo gem install rdoc-data
+	sudo rdoc-data --install
+
+Or, install with these options:
+
+	sudo gem install chef-solo-wrapper --no-rdoc --no-ri
 
 #### Using Git (devel)
 
@@ -234,7 +253,7 @@ For more information see http://wiki.opscode.com/display/chef/Chef+Solo
 
 ### Configure node.json for Chef Solo
 
-By default, when setting up Chef Solo above, /etc/chef/node.json is created with empty json.
+By default, when setting up Chef Solo above, `/etc/chef/node.json` is created with empty json.
 The command line options of chef-solo-wrapper (see usage examples below) can be used to provide this file, a run_list or override attributes, however do feel free to configure this file as required.
 
 ## First Chef Solo Run
