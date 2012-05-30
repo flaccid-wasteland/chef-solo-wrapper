@@ -261,7 +261,7 @@ Example `node.json`:
 
 	{
 	  "rs_utils": {
-	    "short_hostname":"reddwarf",
+	    "short_hostname":"reddwarf"
 	  },
 	  "run_list": [ "recipe[rs_utils::default]" ]
 	}
