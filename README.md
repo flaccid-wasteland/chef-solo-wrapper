@@ -188,15 +188,15 @@ You may need to action this before hand:
 	sudo gem install rdoc-data
 	sudo rdoc-data --install
 
-Or, install with these options:
+Or, just install with these options:
 
 	sudo gem install chef-solo-wrapper --no-rdoc --no-ri
 
 #### Using Git (devel)
 
-    mkdir -p ~/src && cd ~/src
+    mkdir -p "$HOME/src" && cd "$HOME/src"
     git clone git://github.com/flaccid/chef-solo-wrapper.git
-    chmod +x ~/src/chef-solo-wrapper/bin/cs.rb
+    chmod +x "$HOME/src/chef-solo-wrapper/bin/cs.rb"
     sudo ln -fsv "$HOME/src/chef-solo-wrapper/bin/cs.rb" /usr/local/bin/cs
 
 Ensure that `/usr/local/bin` is in your `PATH`. When using Bash, this can be done on most platforms if not already set: `( grep PATH ~/.bashrc | grep /usr/local/bin ) || echo 'PATH=$PATH:/usr/local/bin' >> ~/.bashrc`
@@ -205,10 +205,11 @@ Ensure that `/usr/local/bin` is in your `PATH`. When using Bash, this can be don
 
 Don't have any cookbooks on your host to play cook with? Check some out quickly:
 
-    mkdir -p "$HOME/src/cookbooks"
-    cd "$HOME/cookbooks"
-    ( [ -e "$HOME/src/cookbooks/cookbooks_public/.git" ] && cd "$HOME/src/cookbooks/cookbooks_public" && git pull ) || git clone git://github.com/flaccid/cookbooks_public.git
-	( [ -e "$HOME/src/cookbooks/cookbooks/.git" ] && cd "$HOME/src/cookbooks/cookbooks" && git pull ) || git clone git://github.com/flaccid/cookbooks.git
+	src_dest="$HOME/src/cookbooks"
+	mkdir -p "$src_dest"
+    cd "$src_dest"
+    [ -e "$src_dest/cookbooks_public/.git" ] && ( cd "$src_dest/cookbooks_public" && git pull ) || git clone git://github.com/flaccid/cookbooks_public.git
+	[ -e "$src_dest/cookbooks/.git" ] && ( cd "$src_dest/cookbooks" && git pull ) || git clone git://github.com/flaccid/cookbooks.git
 	
 These are the same cookbook repositories used with the RightScale Linux Server RL 5.7 ServerTemplate (http://www.rightscale.com/library/server_templates/RightScale-Linux-Server-RL-5-7/lineage/13544).
 
