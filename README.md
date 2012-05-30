@@ -259,7 +259,7 @@ The command line options of chef-solo-wrapper (see usage examples below) can be 
 
 ## First Chef Solo Run
 
-### Test chef_solo_wrapper
+### Test chef-solo-wrapper
 
 This prints the chef-solo-wrapper usage info only which is handy for testing the stack:
 
