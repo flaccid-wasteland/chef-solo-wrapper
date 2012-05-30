@@ -96,7 +96,7 @@ Note: Ubuntu 10.04 LTS uses Chef 0.7.10 so install via Opscode Apt or RubyGem (b
 
 #### Opscode Apt
 
-This is particularly recommended for Debian-based distributions that don't have the chef package available in the particular release.
+This is particularly recommended for Debian-based distributions that don't have the chef package available in the particular release (or the chef version of the package is too old).
 
 	DEBIAN_FRONTEND=noninteractive
 	sudo mkdir -p /etc/apt/trusted.gpg.d
@@ -191,17 +191,37 @@ Don't have any cookbooks on your host to play cook with? Check some out quickly:
     ( [ -e "$HOME/src/cookbooks/cookbooks_public/.git" ] && cd "$HOME/src/cookbooks/cookbooks_public" && git pull ) || git clone git://github.com/flaccid/cookbooks_public.git
 	( [ -e "$HOME/src/cookbooks/cookbooks/.git" ] && cd "$HOME/src/cookbooks/cookbooks" && git pull ) || git clone git://github.com/flaccid/cookbooks.git
 	
-These are the same cookbook repositories used with the RightScale Linux Server RL 5.7 ServerTemplate (http://www.rightscale.com/library/server_templates/RightScale-Linux-Server-RL-5-7/lineage/13544)
+These are the same cookbook repositories used with the RightScale Linux Server RL 5.7 ServerTemplate (http://www.rightscale.com/library/server_templates/RightScale-Linux-Server-RL-5-7/lineage/13544).
 
 ### Configure cookbooks for Chef Solo
 
 Next, setup the `solo.rb` to be used with `chef-solo`. Modify `/etc/chef/solo.rb` as required for your configuration. Requires root.
 
-An example `solo.rb` matching the cookbooks from the RightScale Linux Server RL 5.7 ServerTemplate installed above:
+This command setups up`solo.rb` for use with the cookbooks from the RightScale Linux Server RL 5.7 ServerTemplate installed above:
 
 	cat <<EOF> /etc/chef/solo.rb
 	file_cache_path "/var/chef-solo"
 	cookbook_path [ "/root/src/cookbooks/cookbooks_public/cookbooks", "/root/src/cookbooks/cookbooks/cookbooks" ]
+	json_attribs "/etc/chef/node.json"
+	EOF
+
+For RightScale Servers, its easy to just use the cookbooks in the cache created from the RightLink boot:
+
+	#!/bin/bash -e
+	
+	mkdir -p /etc/chef
+	unset cookbook_path
+	rs_cookbook_cache_path=/var/cache/rightscale/cookbooks/default		# RL 5.8
+	#rs_cookbook_cache_path=/var/cache/rightscale/cookbooks				# RL =< 5.7
+	
+	for file in "$rs_cookbook_cache_path"/*
+	do
+	    cookbook_path="$cookbook_path${cookbook_path:+, }\"$file\""
+	done
+
+	cat <<EOF > /etc/chef/solo.rb
+	file_cache_path "/var/chef-solo"
+	cookbook_path [ $cookbook_path ]
 	json_attribs "/etc/chef/node.json"
 	EOF
 
@@ -214,7 +234,7 @@ For more information see http://wiki.opscode.com/display/chef/Chef+Solo
 
 ### Configure node.json for Chef Solo
 
-By default, when setting up Chef Solo above, /etc/chef/node.json is created as empty json.
+By default, when setting up Chef Solo above, /etc/chef/node.json is created with empty json.
 The command line options of chef-solo-wrapper (see usage examples below) can be used to provide this file, a run_list or override attributes, however do feel free to configure this file as required.
 
 ## First Chef Solo Run
