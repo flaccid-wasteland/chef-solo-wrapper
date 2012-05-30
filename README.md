@@ -257,6 +257,16 @@ For more information see http://wiki.opscode.com/display/chef/Chef+Solo
 By default, when setting up Chef Solo above, `/etc/chef/node.json` is created with empty json.
 The command line options of chef-solo-wrapper (see usage examples below) can be used to provide this file, a run_list or override attributes, however do feel free to configure this file as required.
 
+Example `node.json`:
+
+	{
+	  "rs_utils": {
+	    "short_hostname":"reddwarf",
+	  },
+	  "run_list": [ "recipe[rs_utils::default]" ]
+	}
+
+
 ## First Chef Solo Run
 
 ### Test chef-solo-wrapper
