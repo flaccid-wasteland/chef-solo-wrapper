@@ -35,6 +35,7 @@ EOS
   opt :sandbox,   "Use the Ruby environment in the local RightLink sandbox."                                                                    # flag --sandbox, default false
   opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                                        # flag --config, default false
   opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String                       # flag --json, default false
+  opt :test,      "Tests requiring chef only plus implies a dry run",                     :short => "-t"                                        # flag --test, default false
   opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                                        # flag --dry, default false
   opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String                       # flag --run, default false
   opt :write,     "Write back to local JSON file.",                                       :short => "-w"                                        # flag --write, default false
@@ -48,6 +49,18 @@ puts 'chef-solo-wrapper '+CHEF_SOLO_WRAPPER_VERSION
 
 solo = false
 server = false
+
+if opts.test
+  begin
+    puts 'Testing require of chef.'
+    require 'chef'
+  rescue
+    puts 'Failed to require Chef RubyGem!'
+    exit 1
+  end
+  puts 'Test passed.'
+  exit
+end
 
 # ensure a solo.rb exists for run
 if File.file?('/etc/chef/solo.rb')
