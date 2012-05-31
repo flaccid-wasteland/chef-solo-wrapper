@@ -137,7 +137,7 @@ Use http://code.google.com/p/git-osx-installer/
 
     pacman -S git
     
-Also ensure that inetutils is installed so the hostname command is available to Ohai:
+Also ensure that `inetutils` is installed so the hostname command is available to Ohai:
 
 	pacman -S inetutils
 
@@ -168,7 +168,7 @@ Note, you may need to install dependencies to build the native extensions on ins
 ### Setup Chef Solo
 
 Configure Chef and Chef Solo as required, see http://wiki.opscode.com/display/chef/Chef+Solo
-Run the below commands (as root or using `sudo -i`) to ensure the required directories and files exist:
+Run the below commands (as `root` or using `sudo -i`) to ensure the required directories and files exist:
 
     mkdir -p /etc/chef /var/chef/cache /var/chef/cookbooks /var/chef/site-cookbooks /var/chef-solo
     touch /etc/chef/solo.rb
