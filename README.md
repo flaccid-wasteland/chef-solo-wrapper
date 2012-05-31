@@ -205,7 +205,7 @@ Ensure that `/usr/local/bin` is in your `PATH`. When using Bash, this can be don
 
 Don't have any cookbooks on your host to play cook with? Check some out quickly:
 
-	src_dest="$HOME/src/cookbooks"
+	src_dest="/usr/src/chef-cookbooks"
 	mkdir -p "$src_dest"
     cd "$src_dest"
     [ -e "$src_dest/cookbooks_public/.git" ] && ( cd "$src_dest/cookbooks_public" && git pull ) || git clone git://github.com/flaccid/cookbooks_public.git
@@ -221,7 +221,7 @@ This command setups up`solo.rb` for use with the cookbooks from the RightScale L
 
 	cat <<EOF> /etc/chef/solo.rb
 	file_cache_path "/var/chef-solo"
-	cookbook_path [ "/root/src/cookbooks/cookbooks_public/cookbooks", "/root/src/cookbooks/cookbooks/cookbooks" ]
+	cookbook_path [ "/usr/src/chef-cookbooks/cookbooks_public/cookbooks", "/usr/src/chef-cookbooks/cookbooks/cookbooks" ]
 	json_attribs "/etc/chef/node.json"
 	EOF
 
