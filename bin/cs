@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.1'
+CHEF_SOLO_WRAPPER_VERSION = '0.0.2'
 
 require 'rubygems'
 require 'trollop'
@@ -36,6 +36,7 @@ EOS
   opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                                        # flag --config, default false
   opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String                       # flag --json, default false
   opt :test,      "Tests requiring chef only plus implies a dry run",                     :short => "-t"                                        # flag --test, default false
+  opt :setup,     "Installs the Chef Rubygem."                                                                                                  # flag --test, default false
   opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                                        # flag --dry, default false
   opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String                       # flag --run, default false
   opt :write,     "Write back to local JSON file.",                                       :short => "-w"                                        # flag --write, default false
@@ -59,6 +60,22 @@ if opts.test
     exit 1
   end
   puts 'Test passed.'
+  exit
+end
+
+if opts.setup
+  begin
+    puts 'Installing Chef RubyGem...'
+    system('gem install chef --no-rdoc --no-ri')
+  rescue
+    puts 'Failed to install Chef Rubygem!'
+    exit 1
+  end
+  puts 'Chef successfully installed.'
+  puts 'Install rest_connection (y/n)?'
+  install_rc = false
+  install_rc = gets.chomp
+  ( puts 'Installing rest_connection RubyGem...'; system('gem install rest_connection --no-rdoc --no-ri') ) unless install_rc != 'y'
   exit
 end
 
