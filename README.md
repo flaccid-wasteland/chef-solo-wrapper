@@ -206,7 +206,9 @@ Note, you may need to install dependencies to build the native extensions on ins
 
     ( ruby -e "require 'rubygems'; require 'chef'; require 'rest_connection'; require 'trollop'" && echo 'RubyGems test passed.' ) || echo 'RubyGems test failed!'
 
-### Setup Chef Solo
+### Chef Solo Configuration
+
+## Setup Chef Solo
 
 Configure Chef and Chef Solo as required, see http://wiki.opscode.com/display/chef/Chef+Solo
 Run the below commands (as `root` or using `sudo -i`) to ensure the required directories and files exist:
