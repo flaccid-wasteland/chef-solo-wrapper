@@ -5,11 +5,14 @@ A basic wrapper for chef-solo with RightScale integration.
 # Requirements
 
 * Linux, Mac OS X or a flavour of *nix (untested on Microsoft Windows)
+
+chef-solo-wrapper uses the following which this README will guide you on installing any needed:
+
 * Ruby
 * RubyGems
-* Trollop RubyGem
+* Git
 * Chef (latest 0.10 recommended)
-* RestConnection (optional, for RightScale API support)
+* RestConnection RubyGem (optional, for RightScale API support)
 
 # Installation
 
@@ -191,8 +194,8 @@ A RightScript is available for easy install on running RightScale servers (http:
 Ensure you have configured `~/.rest_connection/rest_api_config.yaml` for use with your RightScale account.
 For more information, see http://support.rightscale.com/12-Guides/03-RightScale_API/Ruby_RestConnection_Helper
 
-    mkdir -p "$HOME/.rest_connection"
-    sudo gem install rest_connection trollop --no-rdoc --no-ri
+    sudo gem install rest_connection --no-rdoc --no-ri
+	mkdir -p "$HOME/.rest_connection"
 
 Note, you may need to install dependencies to build the native extensions on install, e.g.:
 
