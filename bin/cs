@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.5'
+CHEF_SOLO_WRAPPER_VERSION = '0.0.6'
 COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
 
 require 'rubygems'
@@ -147,7 +147,6 @@ end
 
 # when a rs server is specified
 if opts[:server]
-
   # import rest_connection
   puts 'Importing RestConnection RubyGem.' unless !opts.verbose
   require 'rest_connection'
@@ -193,9 +192,9 @@ if opts[:server]
     end
   }
   puts "    DEBUG:\n#{p server_attributes}" unless !opts.debug
-
 end
 
+# merge attributes
 if server_attributes
   puts server_attributes.to_json
   puts '    DEBUG: Merging attributes.' unless !opts.debug
@@ -204,19 +203,22 @@ else
   puts '    DEBUG: No server attributes to merge.' unless !opts.debug
 end
 
-if opts.run
-  # override runlist
-  attributes['run_list'] = "#{opts.run}"
+# override runlist
+if opts[:run]
+  attributes['run_list'] = "#{opts[:run]}"
 end
 
 # write attributes back to local node.json
-if opts.write and server_attributes
+if opts[:write] and server_attributes
 	node_json = JSON.pretty_generate(attributes)
-	puts "Node Attributes: \n #{node_json}" unless !opts.debug
-	# open file for write back
-	fh = File.new(node_file, "w")
-	fh.write(node_json)
-	fh.close
+	puts "    DEBUG: Node Attributes: \n #{node_json}" if opts[:debug]
+	puts "    DEBUG: Writing attributes to #{json_file}" if opts[:debug]
+	begin
+	  # open file for write back
+	  fh = File.new(json_file, "w")
+	  fh.write(node_json)
+	  fh.close
+	end
 end
 
 # pre append options
@@ -225,6 +227,7 @@ chef_json = " -j #{opts[:json]}" if opts[:json]
 
 # set the chef-solo command depending if rs sandbox
 if opts[:sandbox]
+  puts '    DEBUG: Using sandbox ruby/chef.' if opts[:debug]
   cs = '/opt/rightscale/sandbox/bin/ruby /opt/rightscale/sandbox/bin/chef-solo'
 else
   cs = 'chef-solo'
@@ -245,7 +248,7 @@ if Process.uid != 0
 end
 
 # finally, run chef-solo
-puts 'Starting Chef Solo.' unless !(opts.verbose || opts.debug)
+puts 'Starting Chef Solo.' unless !(opts[:verbose] || opts[:debug])
 unless opts[:dry]
   system(cmd)
 else

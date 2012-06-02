@@ -30,18 +30,31 @@ class ConfigHelper
   def install_chef
     puts
     puts '=> Setting up Chef Solo.'
-    puts 'Installing Chef RubyGem...'
-    gem = 'chef'
-    begin
-       puts  "#{gem} already installed, version: #{Gem::Specification.find_by_name(gem).version}."
-    rescue Gem::LoadError
-      install_gem(gem)
-    rescue
-      install_gem(gem) unless Gem.available?(gem)
-    rescue
-      raise 'Failed to install Chef Rubygem!'
+    case "#{`lsb_release -si`.strip}"
+      when 'Ubuntu'
+        puts 'Ubuntu detected; installing from opscode apt.'
+        system("DEBIAN_FRONTEND=noninteractive")
+        system("sudo mkdir -p /etc/apt/trusted.gpg.d")
+        system("gpg --keyserver keys.gnupg.net --recv-keys 83EF826A")
+        system("gpg --export packages@opscode.com | sudo tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null")
+        system('echo "deb http://apt.opscode.com/ $(lsb_release -cs)-0.10 main" > /etc/apt/sources.list.d/opscode.list')
+        system("sudo apt-get -y update")
+        system("sudo apt-get -y upgrade")
+        system("sudo apt-get -y install chef")
+        exit
+    else
+      puts 'Installing Chef RubyGem...'
+      gem = 'chef'
+      begin
+         puts  "#{gem} already installed, version: #{Gem::Specification.find_by_name(gem).version}."
+      rescue Gem::LoadError
+        install_gem(gem)
+      rescue
+        install_gem(gem) unless Gem.available?(gem)
+      rescue
+        raise 'Failed to install Chef Rubygem!'
+      end
     end
-    puts
   end
   
   def setup_solo_rb(file, auto=@setup_defaults)
