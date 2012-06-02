@@ -30,23 +30,28 @@ class ConfigHelper
   def install_chef
     puts
     puts '=> Setting up Chef Solo.'
-    lsb_release = system("`which lsb_release`")
-    if ! lsb_release
+    if system("`which lsb_release`")
+      lsb_release = `lsb_release -si`
+      lsb_release.strip!
+    else
       puts '    DEBUG: lsb_release not found.' if @debug
       lsb_release = 'none'
     end
     case "#{lsb_release.strip}"
       when 'Ubuntu'
         puts 'Ubuntu detected; installing from opscode apt.'
-        ( puts 'Chef already installed, skipping.' and return ) if system("dpkg -l | grep chef")
-        system("DEBIAN_FRONTEND=noninteractive")
-        system("sudo mkdir -p /etc/apt/trusted.gpg.d")
-        system("gpg --keyserver keys.gnupg.net --recv-keys 83EF826A")
-        system("gpg --export packages@opscode.com | sudo tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null")
-        system('echo "deb http://apt.opscode.com/ $(lsb_release -cs)-0.10 main" > /etc/apt/sources.list.d/opscode.list')
-        system("sudo apt-get -y update")
-        system("sudo apt-get -y upgrade")
-        system("sudo apt-get -y install chef")
+        if ! system("dpkg -l | grep chef")
+          system("DEBIAN_FRONTEND=noninteractive")
+          system("sudo mkdir -p /etc/apt/trusted.gpg.d")
+          system("gpg --keyserver keys.gnupg.net --recv-keys 83EF826A")
+          system("gpg --export packages@opscode.com | sudo tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null")
+          system('echo "deb http://apt.opscode.com/ $(lsb_release -cs)-0.10 main" > /etc/apt/sources.list.d/opscode.list')
+          system("sudo apt-get -y update")
+          system("sudo apt-get -y upgrade")
+          system("sudo apt-get -y install chef")
+        else
+          puts 'Chef already installed, skipping.'
+        end
         exit
     else
       puts 'Installing Chef RubyGem...'
