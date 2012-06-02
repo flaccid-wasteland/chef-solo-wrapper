@@ -16,7 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.2'
+CHEF_SOLO_WRAPPER_VERSION = '0.0.3'
+COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
 
 require 'rubygems'
 require 'trollop'
@@ -36,13 +37,15 @@ EOS
   opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                                        # flag --config, default false
   opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String                       # flag --json, default false
   opt :test,      "Tests requiring chef only plus implies a dry run",                     :short => "-t"                                        # flag --test, default false
-  opt :setup,     "Installs the Chef Rubygem."                                                                                                  # flag --test, default false
+  opt :setup,     "Installs the Chef Rubygem.",                                           :type => String                                       # flag --test, default false
+  opt :fetch,     "Fetches cookbooks.",                                                   :short => "-f", :type => String                       # flag --fetch, default false
   opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                                        # flag --dry, default false
   opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String                       # flag --run, default false
   opt :write,     "Write back to local JSON file.",                                       :short => "-w"                                        # flag --write, default false
   opt :loglevel,  "The Chef log level to use: debug, info, warn, error, fatal",           :short => "-l", :default => "info", :type => String   # flag --loglevel, default info
   opt :verbose,   "Verbose mode.",                                                        :short => "-v"                                        # flag --verbose, default false
   opt :debug,     "Debug mode."                                                                                                                 # flag --debug, default faulse
+  opt :archive,   "Checkout cookbooks in archive mode."                                                                                         # flag --debug, default faulse
   opt :help, 	  "Print usage info and exit.",                                       	  :short => "-h"
 end
 puts "options: #{opts.to_json}" unless !(opts.verbose || opts.debug and !opts.help)
@@ -50,8 +53,11 @@ puts 'chef-solo-wrapper '+CHEF_SOLO_WRAPPER_VERSION
 
 solo = false
 server = false
+node_json = '/etc/chef/node.json'
+solo_rb = '/etc/chef/solo.rb'
 
-if opts.test
+# Test mode (exits after test)
+if opts[:test]
   begin
     puts 'Testing require of chef.'
     require 'chef'
@@ -63,19 +69,73 @@ if opts.test
   exit
 end
 
-if opts.setup
+def install_chef_rubygem
   begin
-    puts 'Installing Chef RubyGem...'
-    system('gem install chef --no-rdoc --no-ri')
+     puts 'Installing Chef RubyGem...'
+     system('gem install chef --no-rdoc --no-ri')
+   rescue
+     puts 'Failed to install Chef Rubygem!'
+     exit 1
+   end
+   puts 'Chef successfully installed.'
+end
+
+def install_rc_rubygem
+  begin
+    puts 'Install rest_connection (y/n)?'
+    install_rc = false
+    install_rc = gets.chomp
+    (puts 'Installing rest_connection RubyGem...'; system('gem install rest_connection --no-rdoc --no-ri') ) unless install_rc != 'y'
   rescue
-    puts 'Failed to install Chef Rubygem!'
+    puts 'Failed to install rest_connection!'
     exit 1
   end
-  puts 'Chef successfully installed.'
-  puts 'Install rest_connection (y/n)?'
-  install_rc = false
-  install_rc = gets.chomp
-  ( puts 'Installing rest_connection RubyGem...'; system('gem install rest_connection --no-rdoc --no-ri') ) unless install_rc != 'y'
+  puts 'rest_connection successfully installed.'
+end
+
+# Setup routines
+case opts[:setup]
+  when 'chef' && 'all'
+    puts 'Setting up Chef Solo.'
+    install_chef_rubygem
+  when 'rc' && 'all'
+    puts 'Setting up rest_connection.'
+    install_rc_rubygem
+  when 'node' && 'all'
+    puts "Setting up #{node_json}."
+    puts "Type or paste your node.json (type END then press <enter> to finish):"
+    $/ = "EOF"
+    stdin = STDIN.gets
+    #puts "--#{stdin}--"
+    File.open(node_json, "w") {|f| f.write stdin.gsub('EOF', '')}
+    exit
+  when 'config' && 'all'
+    puts "Setting up #{solo_rb}."
+    puts "Type or paste your solo.rb (type END then press <enter> to finish):"
+    $/ = "END"
+    stdin = STDIN.gets
+    File.open(solo_rb, "w") {|f| f.write stdin.gsub('EOF', '')}
+    exit
+end
+
+# Fetch cookbooks option
+# cs --fetch git://github.com/flaccid/cookbooks_public.git
+if opts[:fetch]
+  if Process.uid == 0
+    Dir.mkdir(COOKBOOKS_SRC_DEST) unless File.exists?(COOKBOOKS_SRC_DEST)
+    cookbooks_dest = COOKBOOKS_SRC_DEST
+  else
+    home_dir = File.expand_path("~")
+    Dir.mkdir(home_dir) unless File.exists?(home_dir)
+    cookbooks_dest = home_dir
+  end
+  puts "Cookbooks destination: #{cookbooks_dest}."
+  if opts[:archive]
+    system("cd #{cookbooks_dest}; git clone --depth=1 #{opts[:fetch]}")
+    #system("git archive --format=tar --remote=#{opts[:fetch]} master | tar -xf -")
+  else
+    system("cd #{cookbooks_dest}; git clone #{opts[:fetch]}")
+  end
   exit
 end
 
