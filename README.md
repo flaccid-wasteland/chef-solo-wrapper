@@ -254,7 +254,7 @@ For RightScale Servers, its easy to just use the cookbooks in the cache created 
 	
 	for file in "$rs_cookbook_cache_path"/*
 	do
-	    cookbook_path="$cookbook_path${cookbook_path:+, }\"$file\""
+	    cookbook_path="$cookbook_path${cookbook_path:+, }\"$file/cookbooks\""    # assumes cookbooks/ for each
 	done
 
 	cat <<EOF > /etc/chef/solo.rb
