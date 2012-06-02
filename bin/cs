@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.4'
+CHEF_SOLO_WRAPPER_VERSION = '0.0.5'
 COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
 
 require 'rubygems'
@@ -38,6 +38,7 @@ EOS
   opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String                       # flag --json, default false
   opt :test,      "Tests requiring chef only plus implies a dry run",                     :short => "-t"                                        # flag --test, default false
   opt :setup,     "Installs the Chef Rubygem.",                                           :type => String                                       # flag --test, default false
+  opt :install,   "Installs tools such as Git.",                                          :type => String                                       # flag --test, default false
   opt :defaults,  "Setups up configuration for default/initial.",                         :default => false                                     # flag --test, default false
   opt :fetch,     "Fetches cookbooks.",                                                   :short => "-f", :type => String                       # flag --fetch, default false
   opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                                        # flag --dry, default false
@@ -76,6 +77,20 @@ config = ConfigHelper.new(SETUP_DEFAULTS, DEBUG)
 # Test mode (exits after test)
 if opts[:test]
   config.test_setup
+  exit
+end
+
+# Install tools routines
+if opts[:install]
+  case opts[:install]
+  when 'git'
+    # requires chef
+    system('rm -Rf /usr/src/git*; rm -Rf /usr/src/chef-cookbooks/git*')
+    system("mkdir -p /usr/src/chef-cookbooks && wget --no-check-certificate https://github.com/opscode-cookbooks/git/tarball/master -O /usr/src/git_cookbook.tar && cd /usr/src && tar zxvf /usr/src/git_cookbook.tar && mv -v /usr/src/opscode-cookbooks-git-* /usr/src/chef-cookbooks/git")
+    File.open('/etc/chef/install_git.json', "w") {|f| f.write '{ "run_list": [ "recipe[git::default]" ] }' }
+    File.open('/etc/chef/install_git_solo.rb', "w") {|f| f.write 'file_cache_path "/var/chef-solo"'+"\n"+'cookbook_path [ "/usr/src/chef-cookbooks" ]'+"\n"'json_attribs "/etc/chef/node.json"'+"\n"}
+    system("chef-solo -c /etc/chef/install_git_solo.rb -j /etc/chef/install_git.json")
+  end
   exit
 end
 
