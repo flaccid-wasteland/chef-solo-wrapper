@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'chef-solo-wrapper'
-  s.version     = '0.0.5'
+  s.version     = '0.0.6'
   s.date        = '2012-06-03'
   s.summary     = "chef-solo-wrapper"
   s.description = "A basic wrapper for chef-solo with RightScale integration."
