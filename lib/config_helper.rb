@@ -30,9 +30,15 @@ class ConfigHelper
   def install_chef
     puts
     puts '=> Setting up Chef Solo.'
-    case "#{`lsb_release -si`.strip}"
+    lsb_release = system("`which lsb_release`")
+    if ! lsb_release
+      puts '    DEBUG: lsb_release not found.' if @debug
+      lsb_release = 'none'
+    end
+    case "#{lsb_release.strip}"
       when 'Ubuntu'
         puts 'Ubuntu detected; installing from opscode apt.'
+        ( puts 'Chef already installed, skipping.' and return ) if system("dpkg -l | grep chef")
         system("DEBIAN_FRONTEND=noninteractive")
         system("sudo mkdir -p /etc/apt/trusted.gpg.d")
         system("gpg --keyserver keys.gnupg.net --recv-keys 83EF826A")
@@ -55,6 +61,19 @@ class ConfigHelper
         raise 'Failed to install Chef Rubygem!'
       end
     end
+  end
+
+  def setup_solo_rb_sandbox(file, sandbox_version=5.8)
+    raise "RightScale cookbooks cache, /var/cache/rightscale/cookbooks not found!" unless File.exists?('/var/cache/rightscale/cookbooks')
+    puts "=> Setting up #{file}."
+    if sandbox_version.to_s == '5.8'
+      cookbooks_cache = '/var/cache/rightscale/cookbooks/default'
+    else
+      cookbooks_cache = '/var/cache/rightscale/cookbooks'
+    end
+    system('mkdir -p /etc/chef')
+    cookbooks_path = Dir.glob("#{cookbooks_cache}/*").map {|element| "\"#{element}\"" }.join(', ')
+    File.open(file, "w") {|f| f.write 'file_cache_path "/var/chef-solo"'+"\n"+'cookbook_path [ "'+"#{cookbooks_path}"+'" ]'+"\n"'json_attribs "/etc/chef/node.json"'+"\n"}
   end
   
   def setup_solo_rb(file, auto=@setup_defaults)
@@ -145,19 +164,18 @@ class ConfigHelper
     end
     if File.file?("#{ENV['HOME']}/solo.rb")
       solo = "#{ENV['HOME']}/solo.rb"
-    else
-      puts '    DEBUG: ~/solo.rb: not found.' if @debug
+      puts "    DEBUG: Using #{ENV['HOME']}/solo.rb as preferred." if @debug      
     end
     unless solo
       puts 'FATAL: No solo.rb file found (see http://wiki.opscode.com/display/chef/Chef+Solo), exiting.'
       exit 1
     else
-      puts "==> Using #{solo}." if @debug
+      puts "    DEBUG: Using #{solo}." if @debug
       if File.zero?(solo) then
         puts "FATAL: #{solo} is empty, exiting."
         exit 1
       end 
-      puts File.new(solo, 'r').read if @debug
+      puts "== solo.rb ==\n#{File.new(solo, 'r').read.strip}\n==" if @debug
     end
   end
 

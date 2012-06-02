@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.6'
+CHEF_SOLO_WRAPPER_VERSION = '0.0.7'
 COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
 
 require 'rubygems'
@@ -103,6 +103,8 @@ if opts[:setup]
       config.install_rest_connection
     when 'config'
       config.setup_solo_rb(solo_file)
+    when 'config-sandbox'
+      config.setup_solo_rb_sandbox(solo_file)
     when 'node'
       config.setup_node_json(json_file)
     when 'all'
@@ -130,14 +132,15 @@ config.pre_checks
 
 # get json if available
 if opts[:json]
-  attributes = File.new(opts.json, "r").read
+  puts "    DEBUG: Using #{opts[:json]}."
+  attributes = File.new(opts[:json], "r").read
 else
-  if File.file?('/etc/chef/node.json')
-    node_file = '/etc/chef/node.json'
-    attributes = JSON.parse(File.new(node_file, "r").read)
+  if File.file?(json_file)
+    node_file = json_file
+    attributes = JSON.parse(File.new(json_file, "r").read)
   elsif File.file?("#{File.expand_path('~')}/node.json")
     node_file = "#{File.expand_path('~')}/node.json"
-    attributes = JSON.parse(File.new("#{File.expand_path('~')}/node.json", "r").read)
+    attributes = JSON.parse(File.new(node_file, "r").read)
   else
     node_file = "#{File.expand_path('~')}/node.json"
     attributes = JSON.parse("{\n}\n")
@@ -191,25 +194,29 @@ if opts[:server]
       end
     end
   }
-  puts "    DEBUG:\n#{p server_attributes}" unless !opts.debug
+  puts "    DEBUG:\n#{p server_attributes}" if opts[:debug]
 end
 
 # merge attributes
 if server_attributes
   puts server_attributes.to_json
-  puts '    DEBUG: Merging attributes.' unless !opts.debug
+  puts '    DEBUG: Merging attributes.' if opts[:debug]
   attributes = server_attributes.merge(attributes)
 else
-  puts '    DEBUG: No server attributes to merge.' unless !opts.debug
+  puts '    DEBUG: No server attributes to merge.' if opts[:debug]
 end
 
 # override runlist
 if opts[:run]
+  puts "    Overriding run_list with: #{opts[:run]}" if opts[:verbose]
   attributes['run_list'] = "#{opts[:run]}"
 end
 
+# new attributes
+puts "    DEBUG: Final attributes: #{attributes.to_json}" if opts[:debug]
+
 # write attributes back to local node.json
-if opts[:write] and server_attributes
+if opts[:write] and attributes
 	node_json = JSON.pretty_generate(attributes)
 	puts "    DEBUG: Node Attributes: \n #{node_json}" if opts[:debug]
 	puts "    DEBUG: Writing attributes to #{json_file}" if opts[:debug]
@@ -220,6 +227,9 @@ if opts[:write] and server_attributes
 	  fh.close
 	end
 end
+
+# debug for final node.json
+puts "== node.json ==\n#{File.open(json_file, "r").read}\n==" if ( opts[:debug] or opts[:verbose] )
 
 # pre append options
 chef_config = " -c #{opts[:config]}" if opts[:config]
@@ -234,8 +244,7 @@ else
 end
 
 # build chef solo command
-cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel} || ( echo 'Chef run failed!'; cat /var/chef-solo/chef-stacktrace.out; exit 1 )"
-puts "    DEBUG: running #{cmd}" if opts[:debug]
+cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel}"
 
 # import chef
 puts 'Importing Chef RubyGem.' if opts[:verbose]
@@ -250,7 +259,13 @@ end
 # finally, run chef-solo
 puts 'Starting Chef Solo.' unless !(opts[:verbose] || opts[:debug])
 unless opts[:dry]
-  system(cmd)
+  begin
+    puts "    DEBUG: running #{cmd}" if opts[:debug]
+    system(cmd)
+  rescue
+    puts 'Chef run failed!'
+    exit 1
+  end
 else
   puts 'Dry run only, exiting.'
   exit
