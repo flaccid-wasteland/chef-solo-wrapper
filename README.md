@@ -21,20 +21,25 @@ See Quick Start below. More install methods coming.
 # Usage
 
 	Usage:
-		   cs [options]
+	       cs [options]
 	where [options] are:
-		--server, -s <s>:   Use attribute data from a RightScale server by nickname or ID.
-		   --sandbox, -a:   Use the Ruby environment in the local RightLink sandbox.
-		    --config, -c:   Use alternate Chef Solo configuration (default used, ~/solo.rb.)
-		  --json, -j <s>:   Use alternate Chef Solo JSON data (default used, ~/node.json.)
-		       --dry, -d:   Dry run only, don't run chef-solo.
-		   --run, -r <s>:   Use alernative run_list for chef-solo run.
-		     --write, -w:   Write back to local JSON file.
+	    --server, -s <s>:   Use attribute data from a RightScale server by nickname or ID.
+	       --sandbox, -a:   Use the Ruby environment in the local RightLink sandbox.
+	        --config, -c:   Use alternate Chef Solo configuration (default used, ~/solo.rb.)
+	      --json, -j <s>:   Use alternate Chef Solo JSON data (default used, ~/node.json.)
+	          --test, -t:   Tests requiring chef only plus implies a dry run
+	     --setup, -e <s>:   Installs the Chef Rubygem.
+	      --defaults, -u:   Setups up configuration for default/initial.
+	     --fetch, -f <s>:   Fetches cookbooks.
+	           --dry, -d:   Dry run only, don't run chef-solo.
+	       --run, -r <s>:   Use alernative run_list for chef-solo run.
+	         --write, -w:   Write back to local JSON file.
 	  --loglevel, -l <s>:   The Chef log level to use: debug, info, warn, error, fatal (default: info)
-		   --verbose, -v:   Verbose mode.
-		     --debug, -e:   Debug mode.
-		      --help, -h:   Print usage info and exit.
-		   --version, -i:   Print version and exit
+	       --verbose, -v:   Verbose mode.
+	         --debug, -b:   Debug mode.
+	       --archive, -i:   Checkout cookbooks in archive mode.
+	          --help, -h:   Print usage info and exit.
+	       --version, -o:   Print version and exit
 
 # Quick Start
 
