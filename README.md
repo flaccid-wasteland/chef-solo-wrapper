@@ -96,11 +96,11 @@ Ensure that `/usr/local/bin` is in your `PATH`. When using Bash, this can be don
 	
 ### chef-solo-wrapper Quick Setup
 
-Next, you can use chef-solo-wrapper to install Chef and optionally RestConnection.
+Next, you can use chef-solo-wrapper to install Chef and RestConnection.
 
 	sudo cs --setup all --defaults
 
-Or, if you already have a configuration ready to input:
+Or, if you already have a configuration ready to input and/or prefer to not install any gems by default:
 
 	sudo cs --setup all
 
@@ -184,7 +184,7 @@ Also ensure that `inetutils` is installed so the hostname command is available t
 
 ### Install RestConnection
 
-This is can be skipped when not using with RightScale.
+This is can be skipped when not using with RightScale (or if RestConnection is already installed from the chef-solo-wrapper Quick Setup).
 
 A RightScript is available for easy install on running RightScale servers (http://www.rightscale.com/library/right_scripts/Install-configure-RestConnecti/lineage/7495).
 
