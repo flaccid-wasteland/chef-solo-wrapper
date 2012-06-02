@@ -199,7 +199,7 @@ chef_json = " -j #{opts.json}" unless !opts.json
 
 # depict if sandbox chef-solo binary is used
 if opts.sandbox
-  cs = '/opt/rightscale/sandbox/bin/chef-solo'
+  cs = '/opt/rightscale/sandbox/bin/ruby /opt/rightscale/sandbox/bin/chef-solo'
 else
   cs = 'chef-solo'
 end

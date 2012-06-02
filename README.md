@@ -121,13 +121,9 @@ Recommended when an OS/distribution does not supply a Chef binary package with i
 
     sudo yum -y install git
 
-#### Debian
+#### Debian/Ubuntu
 
-    sudo apt-get -y install git git-core
-
-#### Ubuntu
-
-    sudo apt-get -y install git-core
+    sudo apt-get -y install git
 
 #### Mac OS X
 
@@ -156,10 +152,10 @@ For more information, see http://support.rightscale.com/12-Guides/03-RightScale_
 Note, you may need to install dependencies to build the native extensions on install, e.g.:
 
 	# on centos/el/redhat
-	yum -y install libxml2 libxml2-devel libxslt-devel
+	sudo yum -y install libxml2 libxml2-devel libxslt-devel
 	
 	# on ubuntu|debian
-	apt-get -y install libxml2 libxml2-dev libxslt-dev
+	sudo apt-get -y install libxml2 libxml2-dev libxslt-dev
 	
 ### Test installed RubyGems
 
@@ -203,15 +199,16 @@ Ensure that `/usr/local/bin` is in your `PATH`. When using Bash, this can be don
 
 ### Checkout Chef Cookbooks
 
-Don't have any cookbooks on your host to play cook with? Check some out quickly:
+Don't have any cookbooks on your host to play cook with? Check some out quickly (using root):
 
 	src_dest="/usr/src/chef-cookbooks"
 	mkdir -p "$src_dest"
-    cd "$src_dest"
-    [ -e "$src_dest/cookbooks_public/.git" ] && ( cd "$src_dest/cookbooks_public" && git pull ) || git clone git://github.com/flaccid/cookbooks_public.git
+	cd "$src_dest"
+	[ -e "$src_dest/cookbooks_public/.git" ] && ( cd "$src_dest/cookbooks_public" && git pull ) || git clone git://github.com/flaccid/cookbooks_public.git
 	[ -e "$src_dest/cookbooks/.git" ] && ( cd "$src_dest/cookbooks" && git pull ) || git clone git://github.com/flaccid/cookbooks.git
 	
 These are the same cookbook repositories used with the RightScale Linux Server RL 5.7 ServerTemplate (http://www.rightscale.com/library/server_templates/RightScale-Linux-Server-RL-5-7/lineage/13544).
+
 
 ### Configure cookbooks for Chef Solo
 
