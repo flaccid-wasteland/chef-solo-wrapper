@@ -68,8 +68,51 @@ For more info see https://wiki.archlinux.org/index.php/Ruby
 
 Ruby and RubyGems are preinstalled.
 
+### Install chef_solo_wrapper
+
+Installation by RubyGem is recommended.
+
+#### RubyGem
+
+	sudo gem install chef-solo-wrapper
+
+You may need to action this before hand:
+
+	sudo gem install rdoc-data
+	sudo rdoc-data --install
+
+Or, just install with these options:
+
+	sudo gem install chef-solo-wrapper --no-rdoc --no-ri
+	
+#### Using Git (devel)
+
+	mkdir -p "$HOME/src" && cd "$HOME/src"
+	git clone git://github.com/flaccid/chef-solo-wrapper.git
+	chmod +x "$HOME/src/chef-solo-wrapper/bin/cs.rb"
+	sudo ln -fsv "$HOME/src/chef-solo-wrapper/bin/cs.rb" /usr/local/bin/cs
+
+Ensure that `/usr/local/bin` is in your `PATH`. When using Bash, this can be done on most platforms if not already set: `( grep PATH ~/.bashrc | grep /usr/local/bin ) || echo 'PATH=$PATH:/usr/local/bin' >> ~/.bashrc`
+	
+### chef-solo-wrapper Quick Setup
+
+Next, you can use chef-solo-wrapper to install Chef and optionally RestConnection.
+
+	sudo cs --setup all --defaults
+
+Or, if you already have a configuration ready to input:
+
+	sudo cs --setup all
+
+Show the new configuration:
+
+	cs --setup show
+
+Now you can skip on down to "Checkout Chef Cookbooks" or do a first run without any.
+
 ### Install Chef
 
+Skip this section if Chef is already installed (see above).
 If the Chef packaged in your distribution is considered old e.g. Ubuntu 10.04 uses Chef 0.7, use the RubyGem install method (below).
 
 #### RHEL/EL/CentOS
@@ -117,6 +160,8 @@ Recommended when an OS/distribution does not supply a Chef binary package with i
 
 ### Install Git
 
+	If needing to check out cookbooks using Git, ensure it is installed on your system.
+
 #### RHEL/EL/CentOS
 
     sudo yum -y install git
@@ -137,7 +182,7 @@ Also ensure that `inetutils` is installed so the hostname command is available t
 
 	pacman -S inetutils
 
-### Install RestConnection & Trollop
+### Install RestConnection
 
 This is can be skipped when not using with RightScale.
 
@@ -170,32 +215,6 @@ Run the below commands (as `root` or using `sudo -i`) to ensure the required dir
     touch /etc/chef/solo.rb
     [ -e /etc/chef/node.json ] || echo "{}" > /etc/chef/node.json     # empty json
     touch /var/chef-solo/chef-stacktrace.out
-	
-### Install chef_solo_wrapper
-
-Installation by RubyGem is recommended.
-
-#### RubyGem
-
-	sudo gem install chef-solo-wrapper
-	
-You may need to action this before hand:
-
-	sudo gem install rdoc-data
-	sudo rdoc-data --install
-
-Or, just install with these options:
-
-	sudo gem install chef-solo-wrapper --no-rdoc --no-ri
-
-#### Using Git (devel)
-
-    mkdir -p "$HOME/src" && cd "$HOME/src"
-    git clone git://github.com/flaccid/chef-solo-wrapper.git
-    chmod +x "$HOME/src/chef-solo-wrapper/bin/cs.rb"
-    sudo ln -fsv "$HOME/src/chef-solo-wrapper/bin/cs.rb" /usr/local/bin/cs
-
-Ensure that `/usr/local/bin` is in your `PATH`. When using Bash, this can be done on most platforms if not already set: `( grep PATH ~/.bashrc | grep /usr/local/bin ) || echo 'PATH=$PATH:/usr/local/bin' >> ~/.bashrc`
 
 ### Checkout Chef Cookbooks
 
