@@ -16,12 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.7'
+CHEF_SOLO_WRAPPER_VERSION = '0.0.9'
 COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
 
 require 'rubygems'
 require 'trollop'
 require 'json'
+require 'yaml'
 
 opts = Trollop::options do
 	version 'chef-solo-wrapper '+CHEF_SOLO_WRAPPER_VERSION+' (c) 2011 Chris Fordham'
@@ -33,6 +34,7 @@ Usage:
 where [options] are:
 EOS
   opt :server,    "Use attribute data from a RightScale server by nickname or ID.",       :short => "-s", :type => String                       # flag --server, default false
+  opt :template,  "Use attribute data from a RightScale ServerTemplate by nickname or ID.", :type => String                                     # flag --template, default false
   opt :sandbox,   "Use the Ruby environment in the local RightLink sandbox."                                                                    # flag --sandbox, default false
   opt :config,    "Use alternate Chef Solo configuration (default used, ~/solo.rb.)",     :short => "-c"                                        # flag --config, default false
   opt :json,      "Use alternate Chef Solo JSON data (default used, ~/node.json.)",       :short => "-j", :type => String                       # flag --json, default false
@@ -41,17 +43,18 @@ EOS
   opt :install,   "Installs tools such as Git.",                                          :type => String                                       # flag --test, default false
   opt :defaults,  "Setups up configuration for default/initial.",                         :default => false                                     # flag --test, default false
   opt :fetch,     "Fetches cookbooks.",                                                   :short => "-f", :type => String                       # flag --fetch, default false
-  opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d"                                        # flag --dry, default false
+  opt :dry,       "Dry run only, don't run chef-solo.",                                   :short => "-d", :default => false                     # flag --dry, default false
   opt :run,       "Use alernative run_list for chef-solo run.",                           :short => "-r", :type => String                       # flag --run, default false
+  opt :env,       "Environment variables to start with e.g. for input values.",           :short => "-e", :type => String
   opt :write,     "Write back to local JSON file.",                                       :short => "-w"                                        # flag --write, default false
   opt :loglevel,  "The Chef log level to use: debug, info, warn, error, fatal",           :short => "-l", :default => "info", :type => String   # flag --loglevel, default info
   opt :verbose,   "Verbose mode.",                                                        :short => "-v"                                        # flag --verbose, default false
-  opt :debug,     "Debug mode.",                                                          :default => false                                     # flag --debug, default faulse
-  opt :archive,   "Checkout cookbooks in archive mode."                                                                                         # flag --debug, default faulse
+  opt :debug,     "Debug mode.",                                                          :default => false                                     # flag --debug, default false
+  opt :quiet,     "Quiet mode.",                                                          :default => false                                     # flag --quiet, default false
+  opt :archive,   "Checkout cookbooks in archive mode."                                                                                         # flag --archive, default false
   opt :help, 	    "Print usage info and exit.",                                       	  :short => "-h"
 end
-puts "options: #{opts.to_json}" unless !(opts.verbose || opts.debug and !opts.help)
-puts "chef-solo-wrapper #{CHEF_SOLO_WRAPPER_VERSION}"
+puts "chef-solo-wrapper #{CHEF_SOLO_WRAPPER_VERSION}\n" unless opts[:quiet]
 
 if opts[:defaults]
   SETUP_DEFAULTS = true
@@ -61,18 +64,60 @@ end
 
 if opts[:debug]
   DEBUG = true
+  log_level = 'debug'
+elsif opts[:verbose]
+  log_level = 'verbose' unless opts[:debug]
+  DEBUG = false
 else
+  log_level = 'info'
   DEBUG = false
 end
 
+require File.join(File.dirname(__FILE__), '../lib/chef_solo_wrapper.rb')
+require File.join(File.dirname(__FILE__), "../lib/easy_logger.rb")
+require File.join(File.dirname(__FILE__), '../lib/config_helper.rb')
+require File.join(File.dirname(__FILE__), "../lib/cookbooks_fetcher.rb")
+
+logger = EasyLogger.new(log_level.to_s)
+config = ConfigHelper.new(SETUP_DEFAULTS, DEBUG, log_level)
+
+logger.log "cli_options: #{opts.to_json}", 'verbose'
+puts "options: #{opts.to_json}" if opts[:help]
+
 solo = false
 server = false
+rs_home = File.expand_path('~')+'/.rightscale'
+env_file = rs_home+'/chef_env.sh'
 
 json_file = '/etc/chef/node.json'
 solo_file = '/etc/chef/solo.rb'
+ 
+# env/inputs
+if opts[:env]
+  logger.log("--env: #{opts[:env]}", 'debug')
+  
+  pairs = opts[:env].split(' ')
+  vars = Hash.new
+  Dir.mkdir(rs_home) unless File.exists?(rs_home)
 
-require File.join(File.dirname(__FILE__), '../lib/config_helper.rb')
-config = ConfigHelper.new(SETUP_DEFAULTS, DEBUG)
+  # store each key/value pair
+  fh = File.new(env_file, "w")
+  pairs.each { |pair|
+    var = "#{pair.split('=')[0]}"
+    val = "#{pair.split('=')[1]}"
+    fh.write pair
+    vars[var] = val
+  }
+  fh.close
+  
+  logger.log "Environment variables: #{vars.to_json}", [ 'verbose', 'debug' ]
+  # merge the chef env with ENV
+  logger.log "Merging environment variables.", 'debug'
+  CS_ENV = vars.merge(ENV)
+  logger.log "Cumulative Environment: #{CS_ENV.inspect}", 'debug'
+else
+  CS_ENV = {}
+end
 
 # Test mode (exits after test)
 if opts[:test]
@@ -86,7 +131,15 @@ if opts[:install]
   when 'git'
     # requires chef
     system('rm -Rf /usr/src/git*; rm -Rf /usr/src/chef-cookbooks/git*')
-    system("mkdir -p /usr/src/chef-cookbooks && wget --no-check-certificate https://github.com/opscode-cookbooks/git/tarball/master -O /usr/src/git_cookbook.tar && cd /usr/src && tar zxvf /usr/src/git_cookbook.tar && mv -v /usr/src/opscode-cookbooks-git-* /usr/src/chef-cookbooks/git")
+    logger.log "[wget] Fetching git cookbook from GitHub..."
+    fetch_cmd = "mkdir -p /usr/src/chef-cookbooks && wget --no-check-certificate https://github.com/opscode-cookbooks/git/tarball/master -O /usr/src/git_cookbook.tar 2>&1 && cd /usr/src && tar zxvf /usr/src/git_cookbook.tar && mv -v /usr/src/opscode-cookbooks-git-* /usr/src/chef-cookbooks/git"
+    install = "[git_install] " + `#{fetch_cmd}`; result=$?.success?
+    if result
+      logger.log install, 'verbose'
+    else
+      logger.log install, 'error'
+      raise "Failed to fetch the git cookbook from GitHub.!"
+    end
     File.open('/etc/chef/install_git.json', "w") {|f| f.write '{ "run_list": [ "recipe[git::default]" ] }' }
     File.open('/etc/chef/install_git_solo.rb', "w") {|f| f.write 'file_cache_path "/var/chef-solo"'+"\n"+'cookbook_path [ "/usr/src/chef-cookbooks" ]'+"\n"'json_attribs "/etc/chef/node.json"'+"\n"}
     system("chef-solo -c /etc/chef/install_git_solo.rb -j /etc/chef/install_git.json")
@@ -105,6 +158,13 @@ if opts[:setup]
       config.setup_solo_rb(solo_file)
     when 'config-sandbox'
       config.setup_solo_rb_sandbox(solo_file)
+    when 'config-oss'
+      l = Logger.new(log_level)
+      l.log 'Setting up for OSS (flaccid) cookbooks...', 'verbose'
+      fetcher = CookbooksFetcher.new(log_level)
+      fetcher.fetch "git://github.com/flaccid/cookbooks_public.git"
+      fetcher.fetch "git://github.com/flaccid/cookbooks.git"
+      File.open(solo_file, "w") {|f| f.write 'file_cache_path "/var/chef-solo"'+"\n"+'cookbook_path [ "/usr/src/chef-cookbooks/cookbooks_public/cookbooks", "/usr/src/chef-cookbooks/cookbooks/cookbooks" ]'+"\n"'json_attribs "/etc/chef/node.json"'+"\n"}
     when 'node'
       config.setup_node_json(json_file)
     when 'all'
@@ -116,7 +176,7 @@ if opts[:setup]
       config.show(solo_file, json_file)
       exit
   end
-  puts "\nSetup complete."
+  logger.log "Setup complete."
   exit
 end
 
@@ -132,7 +192,7 @@ config.pre_checks
 
 # get json if available
 if opts[:json]
-  puts "    DEBUG: Using #{opts[:json]}."
+  logger.log "Using provided json: #{opts[:json]}", 'debug'
   attributes = File.new(opts[:json], "r").read
 else
   if File.file?(json_file)
@@ -151,75 +211,158 @@ end
 # when a rs server is specified
 if opts[:server]
   # import rest_connection
-  puts 'Importing RestConnection RubyGem.' unless !opts.verbose
+  logger.log 'Importing RestConnection RubyGem.', 'verbose'
   require 'rest_connection'
 
   # fetch server via rest_connection
   if opts.server.to_i > 0
-    puts "Finding server: #{opts.server}."
+    logger.log "Finding server: #{opts.server}."
     server = Server.find(opts.server.to_i)
   else
-    puts "Finding server: '%#{opts.server}%'"
+    logger.log "Finding server: '%#{opts.server}%'"
     server = Server.find(:first) { |s| s.nickname =~ /#{opts.server}/ }
   end
-  puts "Found server, '#{server.nickname}'."
-  puts server.to_yaml unless !opts.verbose
+  logger.log "Found server, '#{server.nickname}'."
+  logger.log server.to_yaml, 'verbose'
   
   # get current instance of server
   server.reload_current
-  puts JSON.pretty_generate(server.settings) unless !opts.debug
+  logger.log JSON.pretty_generate(server.settings), 'debug'
 
   # assign inputs from server params
   inputs = server.parameters
-  puts "    DEBUG: #{JSON.pretty_generate(inputs)}" unless !opts.debug
+  logger.log "#{JSON.pretty_generate(inputs)}", 'debug'
   server_attributes = Hash.new
   inputs.each { |input,v|
     if inputs.to_s =~ /^[A-Z]+$/
-      puts "    DEBUG: right_script input #{k} discarded." unless !opts.debug
+      logger.log "right_script input #{k} discarded.", 'debug'
     else
-      puts "    DEBUG: #{input} => #{v}" unless !opts.debug
+      logger.log "#{input} => #{v}", 'debug'
       keys = input.split("/")
       if keys.count == 2
         type = v.split(':')[0] 
         value = v.split(':')[1]
         value = '' unless value != "$ignore"
         if keys[0] != 'rightscale'
-          puts "    DEBUG: node attribute #{keys[1]} detected for cookbook, #{keys[0]}." unless !opts.debug
-          puts "    DEBUG: attribute:#{keys[0]}[\"#{keys[1]}\"] type:#{type} value:#{value}" unless !opts.debug
-          puts "    DEBUG: [#{keys[0]}][#{keys[1]}] => type: #{type}" unless !opts.debug 
-          puts "    DEBUG: [#{keys[0]}][#{keys[1]}] => value: #{value}" unless !opts.debug
+          logger.log "node attribute #{keys[1]} detected for cookbook, #{keys[0]}.", 'debug'
+          logger.log "attribute:#{keys[0]}[\"#{keys[1]}\"] type:#{type} value:#{value}", 'debug'
+          logger.log "[#{keys[0]}][#{keys[1]}] => type: #{type}", 'debug'
+          logger.log "[#{keys[0]}][#{keys[1]}] => value: #{value}", 'debug'
           server_attributes["#{keys[0]}"] = {} unless server_attributes["#{keys[0]}"]
           server_attributes["#{keys[0]}"]["#{keys[1]}"] = "#{value}"
         end
       end
     end
   }
-  puts "    DEBUG:\n#{p server_attributes}" if opts[:debug]
+  logger.log "\n#{p server_attributes}", 'debug'
+elsif opts[:template]
+  # steal inputs from ST
+
+  logger.log "Importing rest_connection Rubygem.."
+  require 'rest_connection'
+
+  template = false
+  
+  if opts[:template].to_i > 0
+    logger.log "Finding ServerTemplate: #{opts[:template]}"
+    template = ServerTemplate.find(opts[:template].to_i)
+  else
+    logger.log "Finding ServerTemplate: '%#{opts[:template]}%'"
+    #puts ServerTemplate.find(:first).inspect; exit
+    template = ServerTemplate.find(:first) { |s| s.nickname =~ /"#{opts[:template]}"/ }
+  end
+  
+  if template  
+    logger.log "ServerTemplate: #{template.to_yaml}", 'debug'
+    executables = template.executables
+    recipes = Array.new
+    executables.each { |exec|
+      if exec['apply'] == 'boot' and exec['recipe']
+        logger.log "detected recipe: #{exec['recipe']}", 'debug'
+        recipes.push(exec['recipe'])
+      end
+    }
+    logger.log "Recipes array: #{recipes.to_json}", 'debug'
+    run_list = "[ #{recipes.map {|element| '"'+"recipe[#{element}]"+'"' }.join(', ')} ]"
+    logger.log "Run List from ST: #{run_list}", 'verbose'
+    opts[:run] = run_list
+    #puts opts[:run]
+  else
+    logger.log "No template found."
+    exit 1
+  end
 end
 
 # merge attributes
 if server_attributes
   puts server_attributes.to_json
-  puts '    DEBUG: Merging attributes.' if opts[:debug]
+  logger.log "Merging attributes.", 'debug'
   attributes = server_attributes.merge(attributes)
 else
-  puts '    DEBUG: No server attributes to merge.' if opts[:debug]
+  logger.log "No server attributes to merge.", 'debug'
 end
 
-# override runlist
+# override runlist if set
 if opts[:run]
-  puts "    Overriding run_list with: #{opts[:run]}" if opts[:verbose]
+  logger.log "Overriding run_list with: #{opts[:run]}", 'verbose'
   attributes['run_list'] = "#{opts[:run]}"
 end
 
-# new attributes
-puts "    DEBUG: Final attributes: #{attributes.to_json}" if opts[:debug]
+if opts[:env]
+  # replace any global env vars
+  logger.log "Overriding node attributes with any found environment variables.", [ 'verbose', 'debug' ]
+
+  def collect_item_attributes(attribs,needle,path=nil)
+    result = {}
+    path = {}
+    attribs.each do |k, v|
+      #puts "recipe[#{k}] attr[#{v}]"
+      if v == needle
+        #puts "    DEBUG: found value, #{v}"
+        result[k] = "#{v}"
+      elsif v.is_a? Hash
+        #puts 'its a hash'
+          collect_item_attributes(attribs[k],needle,path).each do |k, v|  
+            result[k] = "#{path}#{v}"
+          end
+        end
+      end
+    result
+  end
+
+  env_vars = CS_ENV.merge(ENV)
+  logger.log "Search env: "+env_vars.to_json, 'debug'
+  logger.log "Attributes: "+attributes.to_json , 'debug'
+
+  env_vars.each { |key|
+    result = {}
+    logger.log "Processing env var: #{key.to_json}", 'debug'
+    logger.log "Search attribute values for #{key[0]} to assign #{key[1]}", 'debug'
+    result = collect_item_attributes(attributes, "#{key[0]}")
+    unless result.empty?
+      #puts "result: #{result.to_json}"
+      attributes.invert.select{ |k,v|
+        att = result.invert[key[0]]
+        logger.log "invert[#{result.invert[key[0]]}] key0[#{key[0]}] v[#{v}] k[#{k}] att[#{att}]", 'debug'
+        if k[att] == key[0]
+          logger.log "Found match for [#{v}] -> [#{result.invert["#{key[0]}"]}] ( [#{k.to_json}] ), updating attributes", 'debug'
+          attributes[v][att] = CS_ENV[key[0]]
+        else
+          logger.log "No match for #{key[0]} under #{v}", 'debug'
+        end
+      }
+    end
+  }
+end
+
+# Final/new attributes
+logger.log "Final attributes: #{attributes.to_json}", 'debug'
 
 # write attributes back to local node.json
-if opts[:write] and attributes
+if attributes
 	node_json = JSON.pretty_generate(attributes)
-	puts "    DEBUG: Node Attributes: \n #{node_json}" if opts[:debug]
-	puts "    DEBUG: Writing attributes to #{json_file}" if opts[:debug]
+	logger.log "Node Attributes: \n #{node_json}", 'debug'
+	logger.log "Writing attributes to #{json_file}", 'debug'
 	begin
 	  # open file for write back
 	  fh = File.new(json_file, "w")
@@ -229,7 +372,7 @@ if opts[:write] and attributes
 end
 
 # debug for final node.json
-puts "== node.json ==\n#{File.open(json_file, "r").read}\n==" if ( opts[:debug] or opts[:verbose] )
+logger.log "== node.json ==\n#{File.open(json_file, "r").read}\n==", [ 'verbose', 'debug' ]
 
 # pre append options
 chef_config = " -c #{opts[:config]}" if opts[:config]
@@ -237,7 +380,7 @@ chef_json = " -j #{opts[:json]}" if opts[:json]
 
 # set the chef-solo command depending if rs sandbox
 if opts[:sandbox]
-  puts '    DEBUG: Using sandbox ruby/chef.' if opts[:debug]
+  logger.log "Using sandbox ruby/chef.", 'debug'
   cs = '/opt/rightscale/sandbox/bin/ruby /opt/rightscale/sandbox/bin/chef-solo'
 else
   cs = 'chef-solo'
@@ -245,28 +388,34 @@ end
 
 # build chef solo command
 cmd = "#{cs}#{chef_config}#{chef_json} --log_level #{opts.loglevel}"
+# prepend env
+cmd = "#{File.open(env_file, "r").read.strip} #{cmd}" if opts[:env]
 
 # import chef
-puts 'Importing Chef RubyGem.' if opts[:verbose]
-require 'chef'
-
+logger.log 'Importing Chef RubyGem.', 'verbose'
+begin
+  require 'chef'
+rescue
+  logger.log "FATAL: Error requiring chef RubyGem!"
+end
+ 
 # prepend sudo if not run as root
 if Process.uid != 0 
-	puts "    DEBUG: Non-root user, appending sudo (#{cmd})." if opts[:debug]
+	logger.log "Non-root user, appending sudo \(#{cmd}\).", 'debug'
 	cmd.insert(0, 'sudo ') 
+else
+  logger.log "User is root.", 'debug'
+end
+
+if opts[:dry]
+  logger.log "Dry run only, exiting."
+  exit
 end
 
 # finally, run chef-solo
-puts 'Starting Chef Solo.' unless !(opts[:verbose] || opts[:debug])
-unless opts[:dry]
-  begin
-    puts "    DEBUG: running #{cmd}" if opts[:debug]
-    system(cmd)
-  rescue
-    puts 'Chef run failed!'
-    exit 1
-  end
-else
-  puts 'Dry run only, exiting.'
-  exit
+logger.log 'Starting Chef Solo.'
+logger.log "executing cmd[#{cmd}]", 'verbose'
+system(cmd)
+if $? != 0
+  raise 'Chef run failed!'
 end

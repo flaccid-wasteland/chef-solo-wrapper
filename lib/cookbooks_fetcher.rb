@@ -1,22 +1,35 @@
-class CookbooksFetcher
+class CookbooksFetcher < EasyLogger
+  
   # constructor method
-  def initialize()
-    
+  def initialize(facility_log_level)
+    @facility_log_level = facility_log_level
+    super(facility_log_level)
   end
   
-  def fetch(cookbooks_src, cookbooks_dest, archive=true)
+  def fetch(cookbooks_src, cookbooks_dest='/usr/src/chef-cookbooks', archive=true)
+    l = Logger.new(@facility_log_level)    
     if Process.uid != 0
-       cookbooks_dest = "#{File.expand_path("~")}/chef-cookbooks"
+      cookbooks_dest = "#{File.expand_path("~")}/chef-cookbooks"
     end
     system("mkdir -p #{cookbooks_dest}")
-    puts "Cookbooks destination: #{cookbooks_dest}."
-    if archive
-       system("cd #{cookbooks_dest}; git clone --depth=1 #{cookbooks_src}")
-       #system("git archive --format=tar --remote=#{opts[:fetch]} master | tar -xf -")
+    l.log "Cookbooks destination: #{cookbooks_dest}.", [ 'verbose', 'debug' ]
+    repos_name = File.basename(cookbooks_src).gsub('.git', '')
+    if File.exists?("#{cookbooks_dest}/#{repos_name}/.git")
+      l.log "Pulling '#{repos_name}' (instead of cloning)..", 'verbose'
+      pull_cmd = "cd #{cookbooks_dest}/#{repos_name} && git pull 2>&1"
+      pull = "[git] " + `#{pull_cmd}`; result=$?.success?
+      if result
+        l.log pull
+      else
+        l.log pull, 'error'
+        raise "Failed to pull git repository!"
+      end
+    elsif archive
+      system("cd #{cookbooks_dest}; git clone --depth=1 #{cookbooks_src}")
+      #system("git archive --format=tar --remote=#{opts[:fetch]} master | tar -xf -")
     else
       system("cd #{cookbooks_dest}; git clone #{cookbooks_src}")
     end
-    exit
   end
-  
+
 end
