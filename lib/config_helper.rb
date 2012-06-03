@@ -61,6 +61,7 @@ class ConfigHelper < ChefSoloWrapper
       system('echo "deb http://apt.opscode.com/ $(lsb_release -cs)-0.10 main" > /etc/apt/sources.list.d/opscode.list')
       system("sudo apt-get -y update")
       system("sudo apt-get -y upgrade")
+      system("sudo apt-get -y install libxml2 libxml2-dev libxslt-dev")
       system("sudo apt-get -y install chef")
     else
       @l.log "[dpkg] Chef already installed, skipping."
@@ -80,6 +81,10 @@ class ConfigHelper < ChefSoloWrapper
         @l.log 'Ubuntu detected; installing from opscode apt.', 'debug'
         install_chef_opscode_apt
         return
+      when 'CentOS'
+        puts 'Needs testing.'
+        # on centos/el/redhat
+        #system("sudo yum -y install libxml2 libxml2-devel libxslt-devel")
     else
       puts "    DEBUG: == RubyGems Sources ==\n#{`gem sources`}\n==\n" if @debug
       @l.log 'Installing Chef RubyGem...'
@@ -153,7 +158,7 @@ class ConfigHelper < ChefSoloWrapper
   end
 
   def install_rest_connection(auto=false)
-    @l.log 'Setting up rest_connection.'
+    @l.log 'Setting up RestConnection.'
     begin
       if auto or @setup_defaults
         install_rc = 'y'

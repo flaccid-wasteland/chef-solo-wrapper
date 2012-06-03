@@ -16,13 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.15'
-COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
-
 require 'rubygems'
 require 'trollop'
 require 'json'
 require 'yaml'
+
+CHEF_SOLO_WRAPPER_VERSION = '0.0.15'
+COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
 
 opts = Trollop::options do
 	version 'chef-solo-wrapper '+CHEF_SOLO_WRAPPER_VERSION+' (c) 2011 Chris Fordham'
@@ -73,6 +73,13 @@ else
   DEBUG = false
 end
 
+solo = false
+server = false
+rs_home = File.expand_path('~')+'/.rightscale'
+env_file = rs_home+'/chef_env.sh'
+json_file = '/etc/chef/node.json'
+solo_file = '/etc/chef/solo.rb'
+
 require File.join(File.dirname(__FILE__), '../lib/chef_solo_wrapper.rb')
 require File.join(File.dirname(__FILE__), "../lib/easy_logger.rb")
 require File.join(File.dirname(__FILE__), '../lib/config_helper.rb')
@@ -83,14 +90,6 @@ config = ConfigHelper.new(SETUP_DEFAULTS, DEBUG, log_level)
 
 logger.log "cli_options: #{opts.to_json}", 'verbose'
 puts "options: #{opts.to_json}" if opts[:help]
-
-solo = false
-server = false
-rs_home = File.expand_path('~')+'/.rightscale'
-env_file = rs_home+'/chef_env.sh'
-
-json_file = '/etc/chef/node.json'
-solo_file = '/etc/chef/solo.rb'
  
 # env/inputs
 if opts[:env]
@@ -138,11 +137,26 @@ if opts[:install]
       logger.log install, 'verbose'
     else
       logger.log install, 'error'
-      raise "Failed to fetch the git cookbook from GitHub.!"
+      raise "Failed to fetch the git cookbook from GitHub!"
     end
     File.open('/etc/chef/install_git.json', "w") {|f| f.write '{ "run_list": [ "recipe[git::default]" ] }' }
     File.open('/etc/chef/install_git_solo.rb', "w") {|f| f.write 'file_cache_path "/var/chef-solo"'+"\n"+'cookbook_path [ "/usr/src/chef-cookbooks" ]'+"\n"'json_attribs "/etc/chef/node.json"'+"\n"}
     system("chef-solo -c /etc/chef/install_git_solo.rb -j /etc/chef/install_git.json")
+  when 'java'
+    # requires chef
+    system('rm -Rf /usr/src/java*; rm -Rf /usr/src/chef-cookbooks/java*')
+    logger.log "[wget] Fetching java cookbook from GitHub..."
+    fetch_cmd = "mkdir -p /usr/src/chef-cookbooks && wget --no-check-certificate https://github.com/opscode-cookbooks/java/tarball/master -O /usr/src/java_cookbook.tar 2>&1 && cd /usr/src && tar zxvf /usr/src/java_cookbook.tar && mv -v /usr/src/opscode-cookbooks-java-* /usr/src/chef-cookbooks/java"
+    install = "[java_install] " + `#{fetch_cmd}`; result=$?.success?
+    if result
+      logger.log install, 'verbose'
+    else
+      logger.log install, 'error'
+      raise "Failed to fetch the java cookbook from GitHub!"
+    end
+    File.open(json_file, "w") {|f| f.write '{ "run_list": [ "recipe[java::default]" ] }' }
+    File.open(solo_file, "w") {|f| f.write 'file_cache_path "/var/chef-solo"'+"\n"+'cookbook_path [ "/usr/src/chef-cookbooks" ]'+"\n"'json_attribs "/etc/chef/node.json"'+"\n"}
+    system("chef-solo -c #{solo_file} -j #{json_file}")
   end
   exit
 end
