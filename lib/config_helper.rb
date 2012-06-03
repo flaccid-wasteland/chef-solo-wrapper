@@ -132,12 +132,18 @@ class ConfigHelper < ChefSoloWrapper
     if auto
       create_empty = 'y'
     else
-      puts 'Create empty node.json [y/n] <enter> ?'
+      puts 'Create empty node.json or edit existing [y/n/e] <enter> ?'
       create_empty = 'n'
       create_empty = gets.chomp
     end
     if create_empty.downcase == 'y'
       json = '{}'
+    elsif create_empty == 'e'
+      editor = `which nano`.strip   # fallback
+      editor = ENV['EDITOR'] if ENV['EDITOR']
+      puts "    DEBUG: Using #{editor}"
+      system("#{editor} /etc/chef/node.json")
+      return      
     else
       puts "Type or paste your node.json (type EOF then press <enter> to finish):"
       $/ = "EOF"

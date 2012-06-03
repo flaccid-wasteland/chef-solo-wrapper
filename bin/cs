@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.13'
+CHEF_SOLO_WRAPPER_VERSION = '0.0.15'
 COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
 
 require 'rubygems'
@@ -183,8 +183,9 @@ end
 # e.g. cs --fetch git://github.com/flaccid/cookbooks_public.git
 if opts[:fetch]
   require File.join(File.dirname(__FILE__), '../lib/cookbooks_fetcher.rb')
-  cookbooks_fetcher = CookbooksFetcher.new
-  cookbooks_fetcher.fetch(opts[:fetch], COOKBOOKS_SRC_DEST)
+  fetcher = CookbooksFetcher.new(log_level)
+  fetcher.fetch opts[:fetch]
+  exit
 end
 
 config.pre_checks
