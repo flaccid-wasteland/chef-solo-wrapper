@@ -52,7 +52,7 @@ class ConfigHelper < ChefSoloWrapper
     puts
   end
 
-  def install_chef_opscode
+  def install_chef_opscode_apt
     if ! system("dpkg -l | grep chef")
       system("DEBIAN_FRONTEND=noninteractive")
       system("sudo mkdir -p /etc/apt/trusted.gpg.d")

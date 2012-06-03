@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CHEF_SOLO_WRAPPER_VERSION = '0.0.10'
+CHEF_SOLO_WRAPPER_VERSION = '0.0.11'
 COOKBOOKS_SRC_DEST = '/usr/src/chef-cookbooks'
 
 require 'rubygems'
